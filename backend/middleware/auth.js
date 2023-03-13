@@ -1,25 +1,21 @@
-const jwt = require('jsonwebtoken');
-const httpStatus = require('http-status');
-const jwtConfig = require('../config/jwtConfig ');
-
-const auth = async (req, res, next) => {
-  try {
-    let token = req.headers['authorization'];
-    if (!token) {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        success: false,
-        message: 'This resources requires authorization',
-      });
-    }
-    const decodeToken = await jwt.verify(token.split(' ')[1], jwtConfig.appKey);
-    req.user = decodeToken;
-    next();
-  } catch (error) {
-    console.error('Auth Middleware Error ==>', error);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error);
+class VerifyUser {
+  static ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) return next();
+    return res.status(401).redirect('/login');
   }
-};
+  forwardAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) return res.redirect('/dashboard');
+    return next();
+  }
+  static isAdmin(req, res, next) {
+    if (!req.isAuthenticated()) return res.redirect('/');
+    console.log(req.user, req.isAuthenticated());
+    // TODO:this should be a redirect action
 
-module.exports = {
-  auth,
-};
+    res.status(400).json({
+      success: false,
+      payload: 'You are not authorized to access this resource',
+    });
+  }
+}
+module.exports = VerifyUser;
