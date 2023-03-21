@@ -8,7 +8,8 @@ const sequelize = new Sequelize(
   {
     host: 'localhost',
     dialect: 'mysql',
-    //   logging: false // Disable logging
+    logging: true, // Disable logging
+    // dialect: 'mysql' | 'sqlite' | 'postgres' | 'mssql',
   }
 );
 
