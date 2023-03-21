@@ -1,11 +1,32 @@
 const router = require('express').Router();
-
 const login = require('./routes/login');
 const register = require('./routes/register');
 const dashboard = require('./routes/dashboard');
+const balance = require('./routes/flwRoutes/balance');
+const bankTransfer = require('./routes/flwRoutes/bankTransfer');
+const cardPayment = require('./routes/flwRoutes/cardPayment');
+const receivePayment = require('./routes/flwRoutes/receivePayment');
+const failedTransaction = require('./routes/flwRoutes/failedTransaction');
+const successfulPayment = require('./routes/flwRoutes/successfulPayment');
+const processingPayment = require('./routes/flwRoutes/processingPayment');
+const billsPayment = require('./routes/flwRoutes/billsPayment');
+const bankVerification = require('./routes/flwRoutes/bankVerification');
+const wallet = require('./routes/wallet');
+// const failedTransaction = require('./routes/flwRoutes/failedTransaction');
+
 console.log(register);
 router.use(login);
 router.use(register);
 router.use(dashboard);
+router.use(bankTransfer);
+router.use(cardPayment);
+router.use(balance);
+router.use(receivePayment);
+router.use(failedTransaction);
+router.use(successfulPayment);
+router.use(processingPayment);
+router.use(billsPayment);
+router.use(bankVerification);
+router.use(wallet);
 
 module.exports = router;
