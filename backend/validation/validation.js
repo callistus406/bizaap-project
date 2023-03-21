@@ -15,14 +15,13 @@ class RegisterValidation extends Validation {
   }
   schema() {
     return joi.object({
-
       businessName: joi.string().min(2).max(30).required(),
       // email  validation
       email: joi
         .string()
         .email({
           minDomainSegments: 2,
-          tlds: { allow: ['com', 'net',"org"] },
+          tlds: { allow: ['com', 'net', 'org'] },
         })
         .required()
         .messages({
@@ -32,11 +31,7 @@ class RegisterValidation extends Validation {
         }),
       password: joi
         .string()
-        .pattern(
-          new RegExp(
-            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$'
-          )
-        )
+        .pattern(new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$'))
         .min(8)
         .max(30)
         .required()
@@ -57,15 +52,24 @@ class RegisterValidation extends Validation {
         .min(9)
         .max(13)
         .required(),
-        bvn:joi
-        .string()
-        .pattern(/^\d{10}$/)
-        .messages({
-          'string.pattern.base': `BVN number must be 10 digits.`,
-        })
-        // .min(10)
-        // .max(10)
-        .required(),
+      // accountNumber: joi
+      //   .string()
+      //   .pattern(/^\d{10}$/)
+      //   .messages({
+      //     'string.pattern.base': `Account number must be 10 digits.`,
+      //   })
+      //   // .min(10)
+      //   // .max(10)
+      //   .required(),
+      // bankCode: joi
+      //   .string()
+      //   .pattern(/^\d{3}$/)
+      //   .messages({
+      //     'string.pattern.base': `Bank Code  must be 3 digits.`,
+      //   })
+      //   // .min(10)
+      //   // .max(10)
+      //   .required(),
     });
   }
 
@@ -86,16 +90,12 @@ class LoginValidation extends Validation {
         .string()
         .email({
           minDomainSegments: 2,
-          tlds: { allow: ['com', 'net',"org"] },
+          tlds: { allow: ['com', 'net', 'org'] },
         })
         .required(),
       password: joi
         .string()
-        .pattern(
-          new RegExp(
-            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$'
-          )
-        )
+        .pattern(new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$'))
         .min(8)
         .max(30)
         .required()
@@ -111,6 +111,12 @@ class LoginValidation extends Validation {
   validate() {
     let validateSchema = this.schema();
     return validateSchema.validate(this.data);
+  }
+}
+
+class CardPaymentValidation extends Validation {
+  constructor(validationInfo) {
+    super(validationInfo);
   }
 }
 
