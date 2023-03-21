@@ -6,7 +6,7 @@ const UserModel = require('../../models/userModel');
 initializePassport(
   passport,
   (email) => UserModel.findOne({ where: { email: email } }),
-  (id) => UserModel.findOne({ where: { _id: id } })
+  (id) => UserModel.findOne({ where: { user_id: id } })
 );
 router.post(
   '/login',
@@ -14,7 +14,7 @@ router.post(
   (req, res, next) => {
     passport.authenticate('local', (error, user, info) => {
       if (error) return res.status(400).json({ success: false, payload: info });
-      if (!user) return res.status(404).json({ success: false, payload: info });
+      if (!user) return res.status(401).json({ success: false, payload: info });
       if (user) {
         req.login(user, function (err) {
           if (err) {
