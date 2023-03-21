@@ -1,10 +1,11 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const {sequelize} = require('../db/connect');
+const { sequelize } = require('../db/connect');
 const UserModel = sequelize.define('users', {
-  _id:{
-    type:DataTypes.STRING,
+  user_id: {
+    type: DataTypes.INTEGER,
     primaryKey: true,
-
+    allowNull: false,
+    autoIncrement: true,
   },
   email: {
     type: DataTypes.STRING,
@@ -13,7 +14,6 @@ const UserModel = sequelize.define('users', {
   businessName: {
     type: DataTypes.STRING,
     allowNull: false,
-
   },
   phone: {
     type: DataTypes.STRING,
@@ -34,4 +34,5 @@ const UserModel = sequelize.define('users', {
   }
 })();
 
-module.exports = UserModel
+// console.log(UserModel);
+module.exports = UserModel;
