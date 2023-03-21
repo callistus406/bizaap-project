@@ -3,11 +3,11 @@ require('dotenv').config();
 const app = express();
 const cookiePasser = require('cookie-parser');
 const routes = require('./api');
-const {connectDb} = require("./db/connect")
+const { connectDb } = require('./db/connect');
 const session = require('express-session');
 const passport = require('passport');
 const PORT = process.env.PORT || 4000;
-
+// require('./service/flutterwaveConfig');
 // middle wares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,19 +21,18 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use("/api/v1", routes);
-
+app.use('/api/v1', routes);
 
 const startApp = async () => {
-    try {
-        await connectDb();
-      app.listen(PORT, () => {
-        console.log(`App is running on port ${PORT}`);
-      });
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
-  // application entry point
-  
-  startApp();
+  try {
+    await connectDb();
+    app.listen(PORT, () => {
+      console.log(`App is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+// application entry point
+
+startApp();
