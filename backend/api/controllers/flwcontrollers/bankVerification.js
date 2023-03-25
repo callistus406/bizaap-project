@@ -1,6 +1,5 @@
 const asyncWrapper = require('../../../middleware/asyncWrapper');
 const flw = require('../../../service/flutterwaveConfig');
-const open = require('open');
 const { generateUniqueId } = require('../../../utils/uniqueIds');
 
 const bankVerification = asyncWrapper(async (req, res) => {
