@@ -7,6 +7,7 @@ const { connectDb } = require('./db/connect');
 const session = require('express-session');
 const passport = require('passport');
 const PORT = process.env.PORT || 4000;
+const errorHandler = require('./middleware/errorHandler');
 // require('./service/flutterwaveConfig');
 // middle wares
 app.use(express.json());
@@ -22,7 +23,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/api/v1', routes);
-
+app.use(errorHandler);
 const startApp = async () => {
   try {
     await connectDb();
