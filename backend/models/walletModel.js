@@ -25,7 +25,7 @@ const WalletModel = sequelize.define('wallet', {
   },
   wallet_pin: {
     type: DataTypes.STRING(200),
-    allowNull: false,
+    allowNull: true,
   },
 
   balance: {
