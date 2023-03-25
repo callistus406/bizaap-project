@@ -2,6 +2,6 @@ const router = require('express').Router();
 
 const { bankVerification } = require('../../controllers');
 
-router.post('/verifybank', bankVerification);
+router.post('/flw/verify_bank', bankVerification);
 
 module.exports = router;

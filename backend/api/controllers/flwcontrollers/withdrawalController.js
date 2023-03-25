@@ -97,7 +97,8 @@ const authorizeWithdrawal = asyncWrapper(async (req, res) => {
     callback_url,
     debit_currency,
   } = req.session.withdrawal_payload;
-
+  const { finalBalance, total_charge, totalChargesPlusAmt } =
+    req.session.withdrawal_payload.charge_details;
   // make request to FLW TODO:
   // const response = await flw.Transfer.initiate({
   //   account_bank,
@@ -122,6 +123,20 @@ const authorizeWithdrawal = asyncWrapper(async (req, res) => {
       where: { wallet_owner: loggedInUser },
     }
   );
-  return res.status(200).send({ success: true, payload: updateCustomerWallet });
+  // send charges, account ,transfer ref, date, dest acct name, bal description
+  if (!updateCustomerWallet[0])
+    return res.status(500).send({ success: false, payload: 'SORRY SOMETHING WENT WRONG' });
+  return res.status(200).send({
+    success: true,
+    payload: {
+      account: account_number,
+      amount,
+      total_debit: totalChargesPlusAmt,
+      charge: total_charge,
+      balance: finalBalance,
+      reference,
+      date: new Date().toDateString(),
+    },
+  });
 });
 module.exports = { withdrawal, authorizeWithdrawal };
