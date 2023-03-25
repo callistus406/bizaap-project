@@ -10,9 +10,7 @@ class RegisterValidation extends Validation {
   constructor(validationInfo) {
     super(validationInfo);
   }
-  getValidationInfo() {
-    return this.getValidationInfo;
-  }
+
   schema() {
     return joi.object({
       businessName: joi.string().min(2).max(30).required(),
@@ -52,24 +50,6 @@ class RegisterValidation extends Validation {
         .min(9)
         .max(13)
         .required(),
-      // accountNumber: joi
-      //   .string()
-      //   .pattern(/^\d{10}$/)
-      //   .messages({
-      //     'string.pattern.base': `Account number must be 10 digits.`,
-      //   })
-      //   // .min(10)
-      //   // .max(10)
-      //   .required(),
-      // bankCode: joi
-      //   .string()
-      //   .pattern(/^\d{3}$/)
-      //   .messages({
-      //     'string.pattern.base': `Bank Code  must be 3 digits.`,
-      //   })
-      //   // .min(10)
-      //   // .max(10)
-      //   .required(),
     });
   }
 
@@ -118,11 +98,103 @@ class CardPaymentValidation extends Validation {
   constructor(validationInfo) {
     super(validationInfo);
   }
-}
 
-// const result = new LoginValidation({ name: 'youls' });
+  schema() {
+    return joi.object({
+      email: joi
+        .string()
+        .email({
+          minDomainSegments: 2,
+          tlds: { allow: ['com', 'net', 'org', 'it'] },
+        })
+        .required(),
+
+      card_number: joi
+        .string()
+
+        .pattern(/^[0-9]+$/)
+        .messages({
+          'string.pattern.base': `Card number must have  15 digits.`, //TODO: change to 15 in production mode
+        })
+        .min(16)
+        .max(16)
+        .required(),
+      cvv: joi
+        .string()
+        .pattern(/^\d{3}$/)
+        .messages({
+          'string.pattern.base': `CVV number must have  3 digits.`,
+        })
+        .required(),
+      amount: joi.number().required(),
+      fullname: joi.string().required(),
+      phone_number: joi
+        .string()
+        .pattern(/^(\+?\d{1,3}[- ]?)?\d{11}$/) // Phone number regular expression pattern
+        .messages({
+          'string.pattern.base': `phone number must have  11 digits.`,
+        })
+        .required(),
+      expiry_month: joi
+        .string()
+        .pattern(/^\d{2}$/)
+        .messages({
+          'string.pattern.base': `Expiry month  must have  2 digits.`,
+        })
+        .required(),
+      expiry_year: joi
+        .string()
+        .pattern(/^\d{2}$/)
+        .messages({
+          'string.pattern.base': `Expiry  month must have  2 digits.`,
+        })
+        .required(),
+    });
+  }
+
+  validate() {
+    let validateSchema = this.schema();
+    // console.log(validateSchema);
+    return validateSchema.validate(this.data);
+  }
+}
+class WithdrawalValidation extends Validation {
+  constructor(validationInfo) {
+    super(validationInfo);
+  }
+
+  schema() {
+    return joi.object({
+      account_bank: joi
+        .string()
+        .pattern(/^\d{3}$/)
+        .messages({
+          'string.pattern.base': `Bank code number must be  3 digits.`,
+        })
+        .required(),
+      amount: joi.number().required(),
+      narration: joi.string().required(),
+      account_number: joi
+        .string()
+        .pattern(/^(\+?\d{1,3}[- ]?)?\d{10}$/) // acct number regular expression pattern
+        .messages({
+          'string.pattern.base': `account number must have  10 digits.`,
+        })
+        .required(),
+    });
+  }
+
+  validate() {
+    let validateSchema = this.schema();
+    // console.log(validateSchema);
+    return validateSchema.validate(this.data);
+  }
+}
 
 module.exports = {
   RegisterValidation,
   LoginValidation,
+  CardPaymentValidation,
+  WithdrawalValidation,
 };
+// return next(createCustomError(response, 400));
