@@ -22,7 +22,7 @@ class HashPassword extends Password {
 class UnHashPassword extends Password {
   constructor(plainPassword, hashedPassword) {
     super(plainPassword);
-    this.hashPassword = hashPassword;
+    this.hashPassword = hashedPassword;
   }
   async unHash() {
     const decrypt = await bcrypt.compare(this.password, this.hashPassword);
