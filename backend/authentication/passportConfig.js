@@ -1,28 +1,29 @@
 const LocalStrategy = require('passport-local').Strategy;
 const { LoginValidation } = require('../validation/validation');
 const bcrypt = require('bcrypt');
+const { UnHashPassword } = require('../authentication/password');
 const passport = require('passport');
 
 const initializePassport = (passport, getUserByEmail, getUserById) => {
   async function authenticateUser(email, password, done) {
     const validateData = { email, password };
-    console.log(validateData);
+
     const { error } = new LoginValidation(validateData).validate();
 
-    if (error) return done(null, false, { message: error.message });
+    if (error) return done(null, false, { payload: error.message });
 
     const user = await getUserByEmail(email);
 
-    if (user == null) return done(null, false, { message: 'Invalid Credentials' });
+    if (user == null) return done(null, false, { payload: 'Invalid Credentials' });
     const fetchUser = user?.dataValues;
 
     try {
-      if (await bcrypt.compare(password, fetchUser.password)) {
+      if (await new UnHashPassword(password, fetchUser.password).unHash()) {
         // console.log(fetchUser)
         return done(null, fetchUser);
       } else {
         return done(null, false, {
-          message: 'Incorrect Username or Password',
+          payload: 'Incorrect Username or Password',
         });
       }
     } catch (e) {
