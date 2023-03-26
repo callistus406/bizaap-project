@@ -5,22 +5,25 @@ const { bankVerification } = require('./flwcontrollers/bankVerification');
 const { getAllBanks } = require('./flwcontrollers/getBanksController');
 const { fetchBal } = require('./flwcontrollers/balanceController');
 const { registerController } = require('./registerController');
+const { getCustomersProfile, updateCustomersProfile } = require('./profileController');
 const {
-  initiatePayment,
   cardPayment,
+  initiatePayment,
   cardAuthorization,
   verifyCardTransaction,
   validateCardTransaction,
 } = require('./flwcontrollers/receiveCardPaymentController');
 module.exports = {
   validateCardTransaction,
+  updateCustomersProfile,
   verifyCardTransaction,
+  getCustomersProfile,
   authorizeWithdrawal,
   registerController,
   cardAuthorization,
   bankVerification,
-  initiatePayment,
   createWalletPin,
+  initiatePayment,
   createWallet,
   getAllBanks,
   cardPayment,
