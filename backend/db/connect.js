@@ -6,10 +6,16 @@ const sequelize = new Sequelize(
   process.env.DB_USERNAME,
   process.env.DB_PASSWORD,
   {
-    host: 'localhost',
+    host: process.env.DB_HOST,
     dialect: 'mysql',
     logging: true, // Disable logging
     // dialect: 'mysql' | 'sqlite' | 'postgres' | 'mssql',
+    // pool: createPool({
+    //   max: 10,
+    //   min: 0,
+    //   acquire: 30000,
+    //   idle: 10000,
+    // }),
   }
 );
 
