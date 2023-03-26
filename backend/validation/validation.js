@@ -191,10 +191,35 @@ class WithdrawalValidation extends Validation {
   }
 }
 
+class ProfileValidator extends Validation {
+  constructor(validationInfo) {
+    super(validationInfo);
+  }
+
+  schema() {
+    return joi.object({
+      phone: joi
+        .string()
+        .pattern(/^(\+?\d{1,3}[- ]?)?\d{11}$/) // Phone number regular expression pattern
+        .messages({
+          'string.pattern.base': `phone number must have  11 digits.`,
+        }),
+
+      businessName: joi.string().min(4).required(),
+    });
+  }
+
+  validate() {
+    let validateSchema = this.schema();
+    // console.log(validateSchema);
+    return validateSchema.validate(this.data);
+  }
+}
 module.exports = {
   RegisterValidation,
   LoginValidation,
   CardPaymentValidation,
   WithdrawalValidation,
+  ProfileValidator,
 };
 // return next(createCustomError(response, 400));
