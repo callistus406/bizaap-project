@@ -1,49 +1,45 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../db/connect');
 const WithdrawalModel = sequelize.define('withdrawal', {
-  _id: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false,
-  },
-
-  withdrawalId: {
+  withdrawal_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-
-  transactionCode: {
-    type: DataTypes.STRING(45),
-    autoIncrement: true,
-  },
-  amount: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-
-  currencyId: {
+  account_owner: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: currency,
-      key: 'id', //TODO: review this
-    },
+  },
+  transaction_code: {
+    type: DataTypes.STRING(45),
+    allowNull: false,
+  },
+  transaction_ref: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  },
+  amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  currency: {
+    type: DataTypes.STRING(4),
+    allowNull: false,
   },
   charged: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  toReceive: {
+  to_receive: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  dateTime: {
-    type: DataTypes.DATE,
+  date_time: {
+    type: DataTypes.STRING(10), //TODO: update this
     allowNull: false,
   },
   method: {
-    type: DataTypes.INTEGER, //TODO:review this
+    type: DataTypes.STRING(45), //TODO:review this
     allowNull: false,
   },
   status: {
