@@ -117,7 +117,7 @@ class CardPaymentValidation extends Validation {
           'string.pattern.base': `Card number must have  15 digits.`, //TODO: change to 15 in production mode
         })
         .min(16)
-        .max(16)
+        .max(20)
         .required(),
       cvv: joi
         .string()
@@ -158,6 +158,7 @@ class CardPaymentValidation extends Validation {
     return validateSchema.validate(this.data);
   }
 }
+
 class WithdrawalValidation extends Validation {
   constructor(validationInfo) {
     super(validationInfo);
@@ -215,6 +216,7 @@ class ProfileValidator extends Validation {
     return validateSchema.validate(this.data);
   }
 }
+
 module.exports = {
   RegisterValidation,
   LoginValidation,

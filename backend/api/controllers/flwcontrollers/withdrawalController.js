@@ -6,6 +6,7 @@ const flw = require('../../../service/flutterwaveConfig');
 const WalletModel = require('../../../models/walletModel');
 const WithdrawalModel = require('../../../models/withdrawalModel');
 const Decimal = require('decimal.js');
+const { transactionLogger } = require('../../../utils/transactionLogger');
 require('dotenv').config();
 
 const withdrawal = asyncWrapper(async (req, res) => {
@@ -23,18 +24,21 @@ const withdrawal = asyncWrapper(async (req, res) => {
     'https://webhook.site/b3e505b0-fe02-430e-a538-22bbbce8ce0d'; // TODO: change this to custom webhook
   req.session.withdrawal_payload.debit_currency = 'NGN';
   // reject amounts below 10 naira
-  if (amount < 50 && amount > 0)
+  console.log('poiuyt', amount.gt(50));
+  if (amount.lt(50))
     return res.status(400).send({
       success: false,
       payload: 'Sorry, you can not transfer amount below 50 naira',
     });
-
+  // get customers balance
   const getWallet = await WalletModel.findOne({
     where: { wallet_owner: loggedInUser },
     attributes: ['balance'],
   });
+
   const balance = new Decimal(getWallet.dataValues.balance);
-  //   calc for 3% of amount entered
+  balance.toFixed(2);
+  //   calc for % of amount entered
   const percentageCharge = new Decimal(
     (process.env.BANK_WITHDRAWAL_PERCENTAGE_CHARGE / 100) * amount
   );
@@ -50,12 +54,18 @@ const withdrawal = asyncWrapper(async (req, res) => {
   // adds the amount to withdraw and sys percentage and FLW charge
   const totalChargesPlusAmt = amount.plus(percentageCharge).plus(flwCharge);
   // checks if the total charges and amount is less than clg
-  console.log(balance, totalChargesPlusAmt);
-  console.log(parseFloat(balance), amount, percentageCharge, flwCharge);
-  if (totalChargesPlusAmt <= balance && totalChargesPlusAmt > 0) {
+  const totalChargeMinusBal = balance.minus(totalChargesPlusAmt);
+
+  // constraints
+  if (totalChargeMinusBal < 0)
+    return res.status(400).send({
+      success: false,
+      payload: 'Sorry, You do not have sufficient balance to perform this transaction',
+    });
+  if (totalChargesPlusAmt <= balance) {
     const finalBalance = balance.minus(totalChargesPlusAmt).toFixed(2);
-    console.log('final', finalBalance);
     // add withdrawal details to session body
+    //* store payload in user session
     req.session.withdrawal_payload.auth_url = '/flw/withdrawal/authorization';
     req.session.withdrawal_payload.wallet_pin_url = '/customer/wallet/create_pin';
     req.session.withdrawal_payload.charge_details = {};
@@ -67,7 +77,7 @@ const withdrawal = asyncWrapper(async (req, res) => {
     //sends url to route the user to create wallet pin route
     // if pin is not set send create wallet pin url
     if (!getWallet.wallet_pin)
-      return res.status(400).send({
+      return res.status(307).send({
         success: false,
         payload: {
           message: 'Wallet pin not set',
@@ -136,19 +146,6 @@ const authorizeWithdrawal = asyncWrapper(async (req, res) => {
   const date = new Date();
   // TODO: dynamic values will come from flw
 
-  console.log({
-    account_owner: loggedInUser,
-    transaction_code: 'dsdsd',
-    transaction_ref: reference,
-    amount: amount,
-    currency: currency,
-    charged: total_charge,
-    to_receive: amount,
-    data_time: date.getFullYear() + '-' + date.getMonth() + 1 + '-' + date.getDay(),
-    method: 'bank Transfer',
-    status: 'successful',
-    remark: narration,
-  });
   const createWithdrawalLog = await WithdrawalModel.create({
     account_owner: loggedInUser,
     transaction_code: 'dsdsd',
@@ -157,13 +154,24 @@ const authorizeWithdrawal = asyncWrapper(async (req, res) => {
     currency: currency,
     charged: total_charge,
     to_receive: amount,
+    receiver: 'julia stores',
+    destination_acct: account_number,
     date_time: date.getFullYear() + '-' + date.getMonth() + 1 + '-' + date.getDay(),
     method: 'bank Transfer',
     status: 'successful',
     remarks: narration,
   });
 
-  console.log(createWithdrawalLog);
+  const loggerPayload = {
+    type: 'Withdrawal',
+    amount: amount,
+    customer_id: loggedInUser,
+    tx_ref: reference,
+    status: 'successful', //TODO:
+  };
+  const logTransaction = await transactionLogger(loggerPayload);
+
+  console.log(logTransaction, 'popings');
 
   // const withdrawalLog = await WithdrawalModel.update({},{where:{}})
   return res.status(200).send({

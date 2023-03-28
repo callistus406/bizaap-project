@@ -46,6 +46,14 @@ const WithdrawalModel = sequelize.define('withdrawal', {
     type: DataTypes.STRING(45),
     allowNull: false,
   },
+  receiver: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
+  destination_acct: {
+    type: DataTypes.STRING(10),
+    allowNull: true,
+  },
   remarks: {
     type: DataTypes.STRING(100),
     allowNull: true,

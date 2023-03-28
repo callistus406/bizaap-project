@@ -7,7 +7,7 @@ const WithdrawalModel = require('./withdrawalModel');
 class TransactionLogModel extends Model {}
 TransactionLogModel.init(
   {
-    log_Id: {
+    log_id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -18,10 +18,6 @@ TransactionLogModel.init(
     },
     amount: {
       type: DataTypes.FLOAT,
-      allowNull: false,
-    },
-    customer_id: {
-      type: DataTypes.INTEGER,
       allowNull: false,
     },
     transaction_id: {
