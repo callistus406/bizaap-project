@@ -9,7 +9,10 @@ const { generateUniqueId } = require('../../../utils/uniqueIds');
 const GatewayModel = require('../../../models/gatewayModel');
 const DepositModel = require('../../../models/depositModel');
 const WalletModel = require('../../../models/walletModel');
+const { pollPaymentStatus } = require('../../../utils/transactionVerificationJob');
 const flw = require('../../../service/flutterwaveConfig');
+const { transactionLogger } = require('../../../utils/transactionLogger');
+const Decimal = require('decimal.js');
 
 require('dotenv').config();
 const getBankTransferCharge = asyncWrapper(async (req, res) => {});
@@ -20,18 +23,21 @@ const initiatePayment = asyncWrapper((req, res) => {
 });
 
 const cardPayment = asyncWrapper(async (req, res, next) => {
+  const loggedInUser = req.user?.user_id;
+
   let {
     card_number,
     cvv,
     email,
     expiry_month,
     expiry_year,
-    currency,
     amount,
+    currency,
     phone_number,
     fullname,
   } = req.body;
   // currency must be in NGN
+  // const currency = 'NGN';
   const validateData = {
     card_number,
     cvv,
@@ -43,9 +49,8 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
     phone_number,
     fullname,
   };
+  // validation
 
-  // TODO: add success redirect
-  // console.log(new CardPaymentValidation(validateData).validate);
   const { error } = new CardPaymentValidation(validateData).validate();
 
   const payload = req.body;
@@ -57,6 +62,8 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
   payload.enckey = process.env.FLW_ENCRYPTION_KEY;
   payload.flw_ref = `FLW${uniqueString}`;
   payload.tx_ref = `TX_${generateUniqueId()}`;
+
+  // first charge card api call
   const response = await flw.Charge.card(payload);
 
   // validate error
@@ -67,11 +74,22 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
       req.session.charge_payload = payload;
       req.session.charge_payload.authorization = response.meta.authorization;
       req.session.charge_payload.authUrl = "/api/v1/flw/payment/card_payment/authorization'";
+      const convertAmt = parseFloat(payload.amount);
+      // get charge
+      const percentage = parseFloat(process.env.CARD_TX_PERCENTAGE_CHARGE) / 100;
+      const commission = percentage * convertAmt;
+      const totalCharge = commission + convertAmt;
+      // req.session.charge_payload.toReceive = payload.amount; //amt to get
+      req.session.charge_payload.totalDebit = totalCharge; //total debit
+      req.session.charge_payload.commission = commission;
+      req.session.charge_payload.toReceive = convertAmt - commission;
       return res.status(200).send({ success: true, payload: req.session.charge_payload });
       // return res.redirect('/api/v1/payment/card_payment/authorization');
     } else {
-      // **TODO: what happens to cards without pin authorization
-      return res.status(400).send({ success: 'false', payload: response });
+      return res.status(400).send({
+        success: 'false',
+        payload: 'Sorry Your card is not supported for this service,please try another card.',
+      });
     }
   } else {
     return res
@@ -84,9 +102,16 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
  * !THIS VALIDATES CARD TRANSACTION WITH PIN
  */
 const cardAuthorization = asyncWrapper(async (req, res) => {
+  const loggedInUser = req.user?.user_id;
+
   const payload = req.session.charge_payload;
+
+  // add pin to the payload
   payload.authorization.pin = req.body.pin;
+  // second  charge card api call
   const response = await flw.Charge.card(payload);
+
+  // return res.send({ response });
   switch (response?.meta?.authorization?.mode) {
     case 'otp':
       // Show the user a form to enter the OTP
@@ -99,21 +124,36 @@ const cardAuthorization = asyncWrapper(async (req, res) => {
       return res.redirect(authUrl);
     default:
       // No validation needed; just verify the payment
+
+      //
       const transactionId = response?.data?.id;
       const transaction = await flw.Transaction.verify({
         id: transactionId,
       });
       if (transaction.data.status == 'successful') {
         //
-        return res.redirect('/payment_successful');
+        const getBalance = await WalletModel.findOne({ where: { wallet_owner: loggedInUser } });
+
+        const convertBalance = new Decimal(getBalance.balance);
+        const balancePlusAmt = new Decimal(convertBalance.plus(payload.amount));
+        const finalBalance = parseFloat(balancePlusAmt.minus(charge));
+        const updateWallet = await WalletModel.update(
+          { balance: finalBalance },
+          { where: { wallet_owner: updateWallet } }
+        );
+        return res.send({ finalBalance: parseFloat(finalBalance) });
       } else if (transaction.data.status == 'pending') {
         // Schedule a job that polls for the status of the payment every 10 minutes
 
-        // TODO:check this
-        transactionVerificationQueue.add({
-          id: transactionId,
-        });
-        return res.status(102).redirect('/payment_processing');
+        const intervalId = setInterval(() => {
+          const paymentId = transactionId;
+          pollPaymentStatus(paymentId, intervalId);
+        }, 2000);
+        setTimeout(() => {
+          clearInterval(intervalId);
+          console.log('Polling stopped.');
+        }, 10800000);
+        return res.status(200).send({ success: false, payload: transaction });
       } else {
         return res.redirect('/payment_failed');
       }
@@ -121,14 +161,20 @@ const cardAuthorization = asyncWrapper(async (req, res) => {
 });
 // !VALIDATES CARD TRANSACTION WITH OTP
 const validateCardTransaction = asyncWrapper(async (req, res) => {
-  function pollPaymentStatus(paymentId) {
+  const loggedInUser = req.user?.user_id;
+
+  function pollPaymentStatus(paymentId, intervalId) {
     flw.Transaction.verify({ id: paymentId })
       .then((response) => {
         // Check the status of the payment
         if (response.data.status === 'successful') {
+          clearInterval(intervalId);
+
           return res.status(200).send({ success: true, response });
         } else if (response.data.status === 'failed') {
-          console.log('Payment failed.');
+          clearInterval(intervalId);
+
+          return res.status(500).send({ success: false, response });
         } else {
           console.log('Payment status:', response.data.status);
         }
@@ -148,7 +194,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
     to_receive,
     gateway_id,
     status,
-    remark,
+    remarks,
   }) => {
     const depositedRecord = await DepositModel.create({
       tx_ref_code,
@@ -156,12 +202,23 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
       transaction_code,
       deposit_amount,
       currency,
-      receiver, //:TODO:
-      to_receive, //:TODO:
+      receiver,
+      to_receive,
       gateway_id,
       status,
-      remark,
+      remarks,
     });
+
+    const loggerPayload = {
+      type: 'Deposit',
+      amount: to_receive,
+      customer_id: receiver,
+      tx_ref: tx_ref_code,
+      status: status,
+    };
+    const isUpdated = await transactionLogger(loggerPayload);
+    // TODO: pass the results in an array
+    console.log(isUpdated);
     return depositedRecord;
   };
   const otp = req.body.otp;
@@ -172,7 +229,6 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
   });
   if (response?.data?.status === 'successful' || response?.data?.status === 'pending') {
     // Verify the payment
-
     const transactionId = response?.data?.id;
     const transaction = await flw.Transaction.verify({
       id: transactionId,
@@ -181,45 +237,38 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
       return res.status(400).send({ success: false, payload: response.message });
 
     if (transaction.data.status == 'successful') {
-      // TODO: wok on this
       response.tx_redirect = '/api/v1/payment_successful';
       const txInfo = transaction.data;
       // REMOVES 3% FROM THE DEPOSITED MONEY
-      // return res.send(txInfo);
-      const creditAmt = (process.env.PERCENTAGE_CHARGE / 100) * txInfo?.amount;
-      // :TODO: Database actions
-
+      const creditAmt = req.session.charge_payload.toReceive;
       const depositedRecord = await populateDatabase({
         tx_ref_code: txInfo.tx_ref,
         depositor: txInfo?.customer.name,
         transaction_code: txInfo.id,
         deposit_amount: txInfo.amount,
         currency: txInfo.currency,
-        receiver: req.user?.dataValues.user_id, //:TODO:
-        to_receive: txInfo.amount - creditAmt, //:TODO:
+        receiver: loggedInUser,
+        to_receive: creditAmt,
         gateway_id: 1,
         status: txInfo.status,
-        remark: txInfo.narration,
+        remarks: txInfo.narration,
       });
       // gets the current balance from wallet
       const getBalance = await WalletModel.findOne({
         where: { wallet_owner: req.user?.dataValues.user_id },
         attributes: ['balance'],
       });
-
-      const creditedAmount = txInfo.amount - creditAmt;
-      const finalBalance = parseFloat(creditedAmount) + parseFloat(getBalance?.dataValues.balance);
-      console.log(finalBalance, 'dsd');
+      // add the credit amt with the current balance
+      const calcBalance = new Decimal(
+        parseFloat(creditAmt) + parseFloat(getBalance?.dataValues.balance)
+      );
+      //convert to two precision
+      const finalBalance = calcBalance.toFixed(2);
       // update user wallet
       const updateWallet = await WalletModel.update(
         { balance: finalBalance },
-        { where: { wallet_owner: req.user?.dataValues.user_id } }
+        { where: { wallet_owner: loggedInUser } }
       );
-
-      console.log(updateWallet);
-      // return res.send(depositedRecord);
-
-      // TODO: increase wallet
       return res.status(200).send({ success: true, payload: depositedRecord, transaction });
       // return res.status(200).send({ success: true, payload: transaction });
       // TODO: refund or decline payment
@@ -228,59 +277,24 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
       // :?check webhook
     } else if (transaction.data.status == 'pending') {
       // Schedule a job that polls for the status of the payment every 10 minutes
-      // TODO:webhook
-      // transactionVerificationQueue.add({
-      //   id: transactionId,
-      // });
-      // TODO:work on cron
-      // const intervalId = setInterval(() => {
-      //   const paymentId = transactionId;
-      //   pollPaymentStatus(paymentId);
-      // }, 2000);
-      // setTimeout(() => {
-      //   clearInterval(intervalId);
-      //   console.log('Polling stopped.');
-      // }, 10 * 60 * 1000 * 6);
-      return res.redirect('/payment_processing');
+
+      // query flw to verify pending transaction
+      const intervalId = setInterval(() => {
+        const paymentId = transactionId;
+        pollPaymentStatus(paymentId, intervalId);
+      }, 2000);
+      setTimeout(() => {
+        clearInterval(intervalId);
+        console.log('Polling stopped.');
+      }, 10800000);
+      return res.status(200).send({ success: false, payload: transaction });
     }
   }
-
-  return res.redirect('/payment_failed');
 });
 
-// !NOT FUNCTIONAL
-const verifyCardTransaction = asyncWrapper(async (req, res) => {
-  const { transactionId, expectedAmount, expectedCurrency } = req.body;
-  console.log('ver', transactionId);
-  const response = await flw.Transaction.verify({ id: transactionId });
-
-  if (
-    response.data.status === 'successful' &&
-    response.data.amount === expectedAmount &&
-    response.data.currency === expectedCurrency
-  ) {
-    // Success! Confirm the customer's payment
-    // populate the database
-
-    res.status(200).send({ success: true, payload: response });
-  } else if (response.data.status === 'pending') {
-    // TODO:redirect user
-  } else if (response.data.status === 'failed') {
-    res.status(400).send({ success: false, payload: response });
-  } else if (
-    response.data.status === 'successful' &&
-    response.data.amount > expectedAmount &&
-    response.data.currency === expectedCurrency
-  ) {
-    // refund customer
-  } else {
-    res.status(400).send({ success: false, payload: response });
-  }
-});
 module.exports = {
   initiatePayment,
   cardPayment,
   cardAuthorization,
-  verifyCardTransaction,
   validateCardTransaction,
 };
