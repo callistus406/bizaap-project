@@ -2,6 +2,8 @@ const asyncWrapper = require('../../../middleware/asyncWrapper');
 const flw = require('../../../service/flutterwaveConfig');
 const axios = require('axios').default;
 const { generateUniqueId } = require('../../../utils/uniqueIds');
+const VerifyUser = require('../../../middleware/auth');
+
 require('dotenv').config();
 
 const getBills = asyncWrapper(async (req, res) => {
