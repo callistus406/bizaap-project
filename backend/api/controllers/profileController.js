@@ -27,6 +27,7 @@ const updateCustomersProfile = asyncWrapper(async (req, res, next) => {
     { where: { user_id: loggedInUser } }
   );
   if (!userProfile[0]) return next(createCustomError('Sorry, something went wrong', 500));
+
   return res.status(200).send({ success: true, payload: userProfile });
 });
 
