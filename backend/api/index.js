@@ -10,14 +10,9 @@ const withdrawal = require('./routes/flwRoutes/withdrawal');
 const billsPayment = require('./routes/flwRoutes/billsPayment');
 const cardPayment = require('./routes/flwRoutes/receiveCardPayment');
 const bankVerification = require('./routes/flwRoutes/bankVerification');
-const failedTransaction = require('./routes/flwRoutes/failedTransaction');
-const successfulPayment = require('./routes/flwRoutes/successfulPayment');
-const processingPayment = require('./routes/flwRoutes/processingPayment');
+
 // const failedTransaction = require('./routes/flwRoutes/failedTransaction');
 
-router.use(failedTransaction);
-router.use(successfulPayment);
-router.use(processingPayment);
 router.use(bankVerification);
 router.use(billsPayment);
 router.use(cardPayment);

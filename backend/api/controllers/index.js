@@ -10,13 +10,11 @@ const {
   cardPayment,
   initiatePayment,
   cardAuthorization,
-  verifyCardTransaction,
   validateCardTransaction,
 } = require('./flwcontrollers/receiveCardPaymentController');
 module.exports = {
   validateCardTransaction,
   updateCustomersProfile,
-  verifyCardTransaction,
   getCustomersProfile,
   authorizeWithdrawal,
   registerController,
