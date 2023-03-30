@@ -9,26 +9,37 @@ UserModel.init(
       allowNull: false,
       autoIncrement: true,
     },
-    email: {
-      type: DataTypes.STRING,
+    full_name: {
+      type: DataTypes.STRING(255),
       allowNull: false,
     },
-    businessName: {
-      type: DataTypes.STRING,
+    username: {
+      type: DataTypes.STRING(255),
       allowNull: false,
+      unique: true,
+    },
+    email: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+      unique: true,
     },
     phone: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
+      unique: true,
     },
     password: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+    bvn: {
+      type: DataTypes.STRING(11),
       allowNull: false,
     },
   },
   { sequelize, modelName: 'user' }
 );
-
+// TODO:add is verified true or false by KYC:add as a middleware
 (async () => {
   try {
     await sequelize.sync({ force: false });
