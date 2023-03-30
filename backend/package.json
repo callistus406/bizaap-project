@@ -25,12 +25,15 @@
     "jwt-decode": "^3.1.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.2.0",
+    "nodemailer": "^6.9.1",
     "nodemon": "^2.0.21",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
     "randomstring": "^1.2.3",
     "sequelize": "^6.29.2",
+    "speakeasy": "^2.0.0",
+    "twilio": "^4.9.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
