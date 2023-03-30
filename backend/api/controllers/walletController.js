@@ -18,7 +18,9 @@ const createWallet = asyncWrapper(async (req, res) => {
   const _id = generateUniqueId();
   const getWallet = await WalletModel.findOne({ where: { wallet_code: accountNumber } });
   if (getWallet)
-    return res.status(400).send({ success: true, payload: 'Account Already exist, Pls try again' });
+    return res
+      .status(400)
+      .send({ success: false, payload: 'Account Already exist, Pls try again' });
   const customerWallet = await WalletModel.create({
     wallet_owner: req.user.user_id,
     wallet_code: accountNumber,
