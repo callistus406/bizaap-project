@@ -200,7 +200,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
       tx_ref_code,
       depositor,
       transaction_code,
-      deposit_amount,
+      amount: deposit_amount,
       currency,
       receiver,
       to_receive,
