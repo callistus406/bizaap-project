@@ -1,5 +1,11 @@
-const { withdrawal, authorizeWithdrawal } = require('./flwcontrollers/withdrawalController');
-const { createWallet, getWallet, createWalletPin } = require('./walletController');
+const { transfer, authorizeTransfer } = require('./flwcontrollers/transferController');
+const {
+  createWallet,
+  getWallet,
+  createWalletPin,
+  walletTransfer,
+  authorizeWalletTransfer,
+} = require('./walletController');
 const { getBills, buyAirtime } = require('./flwcontrollers/billsController');
 const { bankVerification } = require('./flwcontrollers/bankVerification');
 const { getAllBanks } = require('./flwcontrollers/getBanksController');
@@ -19,11 +25,13 @@ module.exports = {
   validateCardTransaction,
   updateCustomersProfile,
   getCustomersProfile,
-  authorizeWithdrawal,
+  authorizeTransfer,
   resetPassword,
   confirmResetPassword,
   otpValidation,
+  walletTransfer,
   registerController,
+  authorizeWalletTransfer,
   cardAuthorization,
   bankVerification,
   createWalletPin,
@@ -32,7 +40,7 @@ module.exports = {
   getAllBanks,
   cardPayment,
   buyAirtime,
-  withdrawal,
+  transfer,
   getWallet,
   fetchBal,
   getBills,
