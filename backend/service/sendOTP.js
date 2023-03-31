@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const speakeasy = require('speakeasy');
-const OtpModel = require('../models/otpModel');
 
 const service = process.env;
 async function sendMailOTP(email, resetUrl, req) {
@@ -23,7 +22,7 @@ async function sendMailOTP(email, resetUrl, req) {
   var token = speakeasy.totp({
     secret: secret.base32,
     encoding: 'base32',
-    time: 60,
+    time: 120,
   });
 
   let transporter = nodemailer.createTransport({
