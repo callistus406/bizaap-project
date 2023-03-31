@@ -1,13 +1,14 @@
-const asyncWrapper = require('../../middleware/asyncWrapper');
+const speakeasy = require('speakeasy');
 const UserModel = require('../../models/userModel');
 const WalletModel = require('../../models/walletModel');
-const speakeasy = require('speakeasy');
+const asyncWrapper = require('../../middleware/asyncWrapper');
 const { createCustomError } = require('../../middleware/customError');
 const generateAccountNumber = require('../../utils/accountNumberGen');
 
 const otpValidation = asyncWrapper(async (req, res, next) => {
   const { token } = req.body;
   if (!token) return next(createCustomError('Input cannot be empty', 400));
+  console.log(req.session);
   if (!req.session.user_otp_auth || !req.session.customer_details)
     return next(createCustomError('Sorry You are not authorized to access this resource', 401));
   const secret = req.session?.user_otp_auth;
@@ -16,10 +17,10 @@ const otpValidation = asyncWrapper(async (req, res, next) => {
     secret: secret,
     encoding: 'base32',
     token: token,
-    time: 60,
+    time: 120,
   });
 
-  if (!verified) return next(createCustomError('Invalid OTP', 400));
+  // if (!verified) return next(createCustomError('Invalid OTP', 400));
   const { username, password, bvn, phone, email, full_name } = req.session.customer_details;
   console.log(username, password, bvn, phone, email, full_name);
   // User creation
