@@ -2,7 +2,7 @@ const { Sequelize, DataTypes, Model } = require('sequelize');
 
 const { sequelize } = require('../db/connect');
 const UserModel = require('./userModel');
-const WithdrawalModel = require('./withdrawalModel');
+const TransferModel = require('./transferModel');
 // const UserModel = require('./');
 class TransactionLogModel extends Model {}
 TransactionLogModel.init(
@@ -37,7 +37,7 @@ TransactionLogModel.belongsTo(UserModel, {
   foreignKey: 'user_id',
   onDelete: 'CASCADE',
 });
-TransactionLogModel.belongsTo(WithdrawalModel, {
+TransactionLogModel.belongsTo(TransferModel, {
   foreignKey: 'user_id',
   onDelete: 'CASCADE',
 });

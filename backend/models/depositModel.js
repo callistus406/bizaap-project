@@ -5,15 +5,15 @@ const UserModel = require('./userModel');
 const GatewayModel = require('./gatewayModel');
 
 const DepositModel = sequelize.define('deposit', {
-  tx_ref_code: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false,
-  },
   deposit_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
+  },
+  tx_ref_code: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
   },
   depositor: {
     type: DataTypes.STRING(200),
@@ -22,7 +22,7 @@ const DepositModel = sequelize.define('deposit', {
     type: DataTypes.STRING(200),
     allowNull: false,
   },
-  deposit_amount: {
+  amount: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
