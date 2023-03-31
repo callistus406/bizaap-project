@@ -168,7 +168,7 @@ class CardPaymentValidation extends Validation {
   }
 }
 
-class WithdrawalValidation extends Validation {
+class TransferValidation extends Validation {
   constructor(validationInfo) {
     super(validationInfo);
   }
@@ -284,7 +284,7 @@ class PasswordValidation extends Validation {
 }
 module.exports = {
   CardPaymentValidation,
-  WithdrawalValidation,
+  TransferValidation,
   RegisterValidation,
   PasswordValidation,
   ProfileValidator,
