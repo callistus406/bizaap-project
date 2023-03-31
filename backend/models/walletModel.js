@@ -12,11 +12,6 @@ const WalletModel = sequelize.define('wallet', {
   wallet_owner: {
     type: DataTypes.INTEGER,
     allowNull: false,
-
-    references: {
-      model: UserModel,
-      key: 'user_id',
-    },
   },
   wallet_code: {
     type: DataTypes.STRING(45),
@@ -35,6 +30,8 @@ const WalletModel = sequelize.define('wallet', {
     defaultValue: 0,
   },
 });
+
+WalletModel.belongsTo(UserModel, { foreignKey: 'wallet_owner' });
 
 (async () => {
   try {
