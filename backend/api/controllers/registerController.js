@@ -1,20 +1,21 @@
-const asyncWrapper = require('../../middleware/asyncWrapper');
-const { generateUniqueId } = require('../../utils/uniqueIds');
-const { RegisterValidation } = require('../../validation/validation');
-const { HashPassword } = require('../../authentication/password');
-const { createCustomError } = require('../../middleware/customError');
-const generateAccountNumber = require('../../utils/accountNumberGen');
+const { Op } = require('sequelize');
+const UserModel = require('../../models/userModel');
 const flw = require('../../service/flutterwaveConfig');
 const WalletModel = require('../../models/walletModel');
-const UserModel = require('../../models/userModel');
 const { sendMailOTP } = require('../../service/sendOTP');
-const { Op } = require('sequelize');
+const asyncWrapper = require('../../middleware/asyncWrapper');
+const { generateUniqueId } = require('../../utils/uniqueIds');
+const { HashPassword } = require('../../authentication/password');
+const { RegisterValidation } = require('../../validation/validation');
+const { createCustomError } = require('../../middleware/customError');
+const generateAccountNumber = require('../../utils/accountNumberGen');
+
+// ---------------------------------------------------------------------------
 const registerController = asyncWrapper(async (req, res, next) => {
   const { email, fullName, username, bvn, phone, password, confirmPassword } = req.body;
   const validateData = { email, fullName, username, phone, password, bvn };
   // payload validation
   const { error } = new RegisterValidation(validateData).checkValidation();
-
   if (error) return res.status(200).json({ success: false, payload: error.message });
   console.log(password, confirmPassword);
   if (password !== confirmPassword)
@@ -65,7 +66,7 @@ const registerController = asyncWrapper(async (req, res, next) => {
   sendMailOTP(email, 'redirectLink', req);
   return res.status(200).json({
     success: true,
-    payload: { message: `OTP has been sent to ${email}`, redirectUrl: '/customer/validate_otp' },
+    payload: { message: `OTP has been sent to ${email}`, authUrl: '/customer/validate_otp' },
   });
 
   // response
