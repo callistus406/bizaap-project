@@ -1,26 +1,37 @@
 const S3 = require('aws-sdk/clients/s3');
 require('dotenv').config();
 const fs = require('fs');
-const bucketName = process.env.BUCKET_NAME;
+const bucketName = process.env.AWS_BUCKET_NAME;
 const region = process.env.AWS_BUCKET_REGION;
 const accessKeyId = process.env.AWS_ACCESS_KEY;
 const secreteAccessKey = process.env.AWS_ACCESS_SECRETE_KEY;
+console.log("pppppppppppppppppppppppppppppppppp")
+console.log({
+  region,
+  accessKeyId,
+  secreteAccessKey,
+})
 const s3 = new S3({
   region,
-  bucketName,
   accessKeyId,
   secreteAccessKey,
 });
 
 // upload
 
-const upload = (file) => {
+const uploadFile = (file) => {
   const fileStream = fs.createReadStream(file.path);
-
+  console.log({
+    region,
+    bucketName,
+    accessKeyId,
+    secreteAccessKey,
+    key: file.filename,
+  })
   const uploadParams = {
     Bucket: bucketName,
     Body: fileStream,
-    key: file.fileName,
+    Key: file.filename,
   };
   return s3.upload(uploadParams).promise();
 };
@@ -30,9 +41,10 @@ const upload = (file) => {
 function downloadFileStream(fileKey) {
   const downloadParams = {
     Key: fileKey,
+    
     Bucket: bucketName,
   };
 
   return s3.getObject(downloadParams).createReadStream();
 }
-module.exports = { upload, downloadFileStream };
+module.exports = { uploadFile, downloadFileStream };

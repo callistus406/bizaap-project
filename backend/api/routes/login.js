@@ -3,7 +3,7 @@ const passport = require('passport');
 const initializePassport = require('../../authentication/passportConfig');
 const UserModel = require('../../models/userModel');
 const GatewayModel = require('../../models/gatewayModel');
-const { verifyBvn } = require('../../utils/bvnVerification');
+// const { verifyBvn } = require('../../utils/bvnVerification');
 initializePassport(
   passport,
   (email) => UserModel.findOne({ where: { email: email } }),

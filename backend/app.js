@@ -10,6 +10,7 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const { sequelize } = require('./db/connect');
 const PORT = process.env.PORT || 4000;
 const errorHandler = require('./middleware/errorHandler');
+const cors = require("cors");
 // require('./service/flutterwaveConfig');
 
 // store config
@@ -26,6 +27,7 @@ const sessionStore = new SequelizeStore({
 });
 
 // middle wares
+app.use(cors())
 app.use(cookiePasser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
