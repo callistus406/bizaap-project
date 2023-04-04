@@ -24,7 +24,7 @@ const TransferModel = sequelize.define('transfer', {
     allowNull: false,
   },
   amount: {
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
   currency: {
@@ -32,15 +32,15 @@ const TransferModel = sequelize.define('transfer', {
     allowNull: false,
   },
   charged: {
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
   to_receive: {
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
   date_time: {
-    type: DataTypes.STRING(10), //TODO: update this
+    type: DataTypes.DATE,
     allowNull: false,
   },
   status: {
@@ -55,7 +55,7 @@ const TransferModel = sequelize.define('transfer', {
     type: DataTypes.STRING(10),
     allowNull: true,
   },
-  remarks: {
+  remark: {
     type: DataTypes.STRING(100),
     allowNull: true,
   },

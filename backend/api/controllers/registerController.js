@@ -9,6 +9,7 @@ const { HashPassword } = require('../../authentication/password');
 const { RegisterValidation } = require('../../validation/validation');
 const { createCustomError } = require('../../middleware/customError');
 const generateAccountNumber = require('../../utils/accountNumberGen');
+const { verifyBvn } = require('../../utils/bvnVerification');
 
 // ---------------------------------------------------------------------------
 const registerController = asyncWrapper(async (req, res, next) => {
@@ -54,7 +55,9 @@ const registerController = asyncWrapper(async (req, res, next) => {
   // const redirectLink = "/"
   // TODO: verify BVN
 
-  // TODO: verify OTP
+  // const isVerified = await verifyBvn(bvn)
+
+  // if(isVerified.)
   req.session.customer_details = {};
   req.session.customer_details.password = hashPassword;
   req.session.customer_details.email = email;

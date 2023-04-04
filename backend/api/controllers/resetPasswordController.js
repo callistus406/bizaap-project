@@ -17,7 +17,7 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
   const isTrue = await storeResetToken(email, resetToken);
 
   // send an email to the user with a link that includes the reset token
-  const resetUrl = `customer/reset_password/${resetToken}`;
+  const resetUrl = `/customer/reset_password/${resetToken}`;
   // send email to the customer
   const message = await sendResetEmail(email, resetUrl);
   // return a response indicating that the reset request was successful
@@ -32,7 +32,6 @@ const confirmResetPassword = asyncWrapper(async (req, res, next) => {
   if (error) return next(createCustomError(error.message, 400));
   // verify the reset token and retrieve the user's email address or username
   const { email } = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
-
   // update the user's password in your database
   await updatePassword(email, password, next);
 

@@ -24,7 +24,7 @@ const WalletModel = sequelize.define('wallet', {
   },
 
   balance: {
-    type: DataTypes.FLOAT, //TODO:change to decimal
+    type: DataTypes.DECIMAL(12, 2),
 
     allowNull: false,
     defaultValue: 0,

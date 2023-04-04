@@ -9,7 +9,10 @@ const balance = require('./routes/flwRoutes/balance');
 const resetPassword = require('./routes/resetPassword');
 const otpValidation = require('./routes/otpValidation');
 const transfer = require('./routes/flwRoutes/transfer');
+const transactions = require('./routes/transactions');
+// const income = require('./routes/income');
 const billsPayment = require('./routes/flwRoutes/billsPayment');
+const lostAndFound = require('./routes/lostAndFound');
 const cardPayment = require('./routes/flwRoutes/receiveCardPayment');
 const bankVerification = require('./routes/flwRoutes/bankVerification');
 
@@ -25,9 +28,12 @@ console.log(register);
 router.use(dashboard);
 router.use(register);
 router.use(balance);
+router.use(transactions);
 router.use(profile);
 router.use(wallet);
 router.use(login);
+router.use(lostAndFound);
+
 router.use(banks);
 
 module.exports = router;

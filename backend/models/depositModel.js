@@ -23,7 +23,7 @@ const DepositModel = sequelize.define('deposit', {
     allowNull: false,
   },
   amount: {
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
   currency: {
@@ -31,7 +31,7 @@ const DepositModel = sequelize.define('deposit', {
     allowNull: false,
   },
   to_receive: {
-    type: DataTypes.FLOAT, //to  personal acct or another users account
+    type: DataTypes.DECIMAL(12, 2), //to  personal acct or another users account
     allowNull: false,
   },
   receiver: {

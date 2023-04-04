@@ -60,8 +60,8 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
 
   // store secrete properties in session
   payload.enckey = process.env.FLW_ENCRYPTION_KEY;
-  payload.flw_ref = `FLW${uniqueString}`;
-  payload.tx_ref = `TX_${generateUniqueId()}`;
+  payload.flw_ref = `FLW-${uniqueString}`;
+  payload.tx_ref = `TX-${generateUniqueId()}`;
 
   // first charge card api call
   const response = await flw.Charge.card(payload);
@@ -169,7 +169,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
         // Check the status of the payment
         if (response.data.status === 'successful') {
           clearInterval(intervalId);
-
+          // TODO: send alert sms
           return res.status(200).send({ success: true, response });
         } else if (response.data.status === 'failed') {
           clearInterval(intervalId);
@@ -263,7 +263,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
         parseFloat(creditAmt) + parseFloat(getBalance?.dataValues.balance)
       );
       //convert to two precision
-      const finalBalance = calcBalance.toFixed(2);
+      const finalBalance = calcBalance;
       // update user wallet
       const updateWallet = await WalletModel.update(
         { balance: finalBalance },
@@ -272,7 +272,6 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
       return res.status(200).send({ success: true, payload: depositedRecord, transaction });
       // return res.status(200).send({ success: true, payload: transaction });
       // TODO: refund or decline payment
-      // return res.redirect('/payment_successful');
       // Frontend will construct the receipt
       // :?check webhook
     } else if (transaction.data.status == 'pending') {
@@ -282,7 +281,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
       const intervalId = setInterval(() => {
         const paymentId = transactionId;
         pollPaymentStatus(paymentId, intervalId);
-      }, 2000);
+      }, 600000);
       setTimeout(() => {
         clearInterval(intervalId);
         console.log('Polling stopped.');

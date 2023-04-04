@@ -1,4 +1,4 @@
-const { transferValidation } = require('../../../validation/validation');
+const { TransferValidation } = require('../../../validation/validation');
 const { UnHashPassword } = require('../../../authentication/password');
 const asyncWrapper = require('../../../middleware/asyncWrapper');
 const { generateUniqueId } = require('../../../utils/uniqueIds');
@@ -15,16 +15,15 @@ const transfer = asyncWrapper(async (req, res) => {
   let { account_bank, account_number, amount, narration } = req.body;
   amount = new Decimal(parseFloat(amount));
   const validateData = req.body;
-  const { error } = new transferValidation(validateData).validate();
+  const { error } = new TransferValidation(validateData).validate();
   if (error) return res.status(400).send({ success: false, payload: error.message });
   req.session.transfer_payload = req.body;
   req.session.transfer_payload.currency = 'NGN';
-  req.session.transfer_payload.reference = `TF_${uniqueId}`;
+  req.session.transfer_payload.reference = `TF-${uniqueId}`;
   req.session.transfer_payload.callback_url =
     'https://webhook.site/b3e505b0-fe02-430e-a538-22bbbce8ce0d'; // TODO: change this to custom webhook
   req.session.transfer_payload.debit_currency = 'NGN';
   // reject amounts below 10 naira
-  console.log('poiuyt', amount.gt(50));
   if (amount.lt(50))
     return res.status(400).send({
       success: false,
@@ -37,7 +36,7 @@ const transfer = asyncWrapper(async (req, res) => {
   });
 
   const balance = new Decimal(getWallet.dataValues.balance);
-  balance.toFixed(2);
+  // balance.toFixed(2);
   //   calc for % of amount entered
   const percentageCharge = new Decimal(
     (process.env.BANK_TRANSFER_PERCENTAGE_CHARGE / 100) * amount
@@ -50,7 +49,7 @@ const transfer = asyncWrapper(async (req, res) => {
       .send({ success: false, payload: 'Sorry, Something went wrong, please try again later.' });
   // converts FLW to float
   const flwCharge = new Decimal(parseFloat(transferFee.data[0].fee));
-  console.log('qwerty', flwCharge);
+
   // adds the amount to withdraw and sys percentage and FLW charge
   const totalChargesPlusAmt = amount.plus(percentageCharge).plus(flwCharge);
   // checks if the total charges and amount is less than clg
@@ -62,8 +61,9 @@ const transfer = asyncWrapper(async (req, res) => {
       success: false,
       payload: 'Sorry, You do not have sufficient balance to perform this transaction',
     });
-  if (totalChargesPlusAmt <= balance) {
-    const finalBalance = balance.minus(totalChargesPlusAmt).toFixed(2);
+  console.log(typeof totalChargesPlusAmt, balance);
+  if (parseFloat(totalChargesPlusAmt) <= balance) {
+    const finalBalance = balance.minus(totalChargesPlusAmt);
     // add transfer details to session body
     //* store payload in user session
     req.session.transfer_payload.auth_url = '/flw/transfer/authorization';
@@ -88,7 +88,7 @@ const transfer = asyncWrapper(async (req, res) => {
   } else {
     return res.status(400).send({
       success: false,
-      payload: 'Sorry, You do not have sufficient balance to perform this transaction ',
+      payload: 'Sorry, You do not have sufficient balance to perform this transaction0000000000 ',
     });
   }
 });
@@ -156,10 +156,13 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
     to_receive: amount,
     receiver: 'julia stores',
     destination_acct: account_number,
-    date_time: date.getFullYear() + '-' + date.getMonth() + 1 + '-' + date.getDay(),
+    date_time: date,
     status: 'successful',
     remarks: narration,
   });
+
+  console.log('"createTr-----------------------------------nsferLog"');
+  console.log(createTransferLog);
 
   const loggerPayload = {
     type: 'Transfer',

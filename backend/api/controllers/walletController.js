@@ -161,7 +161,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     return next(createCustomError('Sorry you are not authorized to access this resource', 401));
 
   let senderFinalBal = senderBal - amount;
-  senderFinalBal.toFixed(2);
+  // senderFinalBal.toFixed(2);
   const updateSenderAcct = await WalletModel.update(
     { balance: senderFinalBal },
     { where: { wallet_owner: loggedInUser } }
@@ -189,7 +189,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   const recipientsBalance = parseFloat(getRecipientsAcct.dataValues?.balance);
 
   let recipientsFinalBal = recipientsBalance + amount;
-  recipientsFinalBal.toFixed(2);
+  // recipientsFinalBal.toFixed(2);
   // update recipients acct
   const updateRecipientsAcct = await WalletModel.update(
     { balance: recipientsFinalBal },
@@ -203,22 +203,22 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
       )
     );
 
-  const date = new Date();
+  const newDate = new Date();
   const txRef = generateUniqueId();
-
+  // console.log(date);
   const transactionCode = generateTXCode();
   // populate transfer table
   const createRecord = await TransferModel.create({
     account_owner: loggedInUser,
     transaction_code: `DM-${transactionCode}`,
-    transaction_ref: `TX_ref-${txRef}`,
+    transaction_ref: `TX-${txRef}`,
     amount: amount,
     charged: 0,
     to_receive: amount,
     currency: 'NGN',
     destination_acct: walletCode,
     receiver: getRecipientsAcct.dataValues.user.full_name,
-    date_time: date.getFullYear() + '-' + date.getMonth() + 1 + '-' + date.getDay(),
+    date_time: newDate,
     status: 'successful',
     remark: narration,
   });
@@ -234,7 +234,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     type: 'Transfer',
     amount: amount,
     customer_id: loggedInUser,
-    tx_ref: `TX_ref-${txRef}`,
+    tx_ref: `TX-${txRef}`,
     status: 'successful',
   };
 
@@ -243,7 +243,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   const createRecord2 = await DepositModel.create({
     depositor: sender,
     transaction_code: `DM-${transactionCode}`,
-    tx_ref_code: `TX_ref-${txRef}`,
+    tx_ref_code: `TX-${txRef}`,
     amount: amount,
     to_receive: amount,
     currency: 'NGN',
@@ -258,7 +258,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     type: 'Deposit',
     amount: amount,
     customer_id: getRecipientsAcct.dataValues?.wallet_owner,
-    tx_ref: `TX_ref-${txRef}`,
+    tx_ref: `TX-${txRef}`,
     status: 'successful',
   };
   const recipientTxLogger = await transactionLogger(recipientTxPayload);

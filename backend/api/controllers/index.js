@@ -11,6 +11,7 @@ const { bankVerification } = require('./flwcontrollers/bankVerification');
 const { getAllBanks } = require('./flwcontrollers/getBanksController');
 const otpValidation = require('./otpValidationController');
 const { fetchBal } = require('./flwcontrollers/balanceController');
+const { income, expense, allTransactions } = require('./transactionsController');
 const { registerController } = require('./registerController');
 const { getCustomersProfile, updateCustomersProfile } = require('./profileController');
 const {
@@ -28,9 +29,12 @@ module.exports = {
   authorizeTransfer,
   resetPassword,
   confirmResetPassword,
+  allTransactions,
   otpValidation,
   walletTransfer,
   registerController,
+  income,
+  expense,
   authorizeWalletTransfer,
   cardAuthorization,
   bankVerification,

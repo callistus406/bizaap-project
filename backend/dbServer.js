@@ -8,7 +8,7 @@ const path = require('path');
 const request = require('request');
 require('dotenv/config');
 
-const Users = require('./models/users');
+const Users = require('./models/userModel');
 const app = express();
 
 // parse json request body
@@ -51,13 +51,11 @@ app.post('/register', async (req, res) => {
               // save user token
               Users.token = token;
 
-              res
-                .status(200)
-                .json({
-                  success: true,
-                  message: 'user created',
-                  data: { email, businessname, phone },
-                });
+              res.status(200).json({
+                success: true,
+                message: 'user created',
+                data: { email, businessname, phone },
+              });
             })
             .catch((err) => {
               console.log(err);
@@ -73,7 +71,7 @@ app.post('/register', async (req, res) => {
     .catch((err) => {
       console.log('error', err);
     });
-});   
+});
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;

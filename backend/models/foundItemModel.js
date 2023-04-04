@@ -10,14 +10,15 @@ const FoundItemModel = sequelize.define('found_items', {
     allowNull: false,
     autoIncrement: true,
   },
+  image_url: {
+    type: DataTypes.STRING(200),
+    allowNull: false,
+  },
   discovery_location: {
     type: DataTypes.STRING(45),
     allowNull: false,
   },
-  item_worth: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
+
   date_found: {
     type: DataTypes.DATE,
     allowNull: false,

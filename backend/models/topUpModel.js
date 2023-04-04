@@ -20,7 +20,7 @@ const TopUpModel = sequelize.define('topUp', {
     allowNull: false,
   },
   amount: {
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
 

@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     dialect: 'mysql',
-    logging: true, // Disable logging
+    logging: false, // Disable logging
     // dialect: 'mysql' | 'sqlite' | 'postgres' | 'mssql',
     // pool: createPool({
     //   max: 10,

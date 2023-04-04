@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 
 const { sequelize } = require('../db/connect');
+const UserModel = require('./userModel');
 
 const LostItemModel = sequelize.define('lost_items', {
   item_id: {
@@ -9,21 +10,33 @@ const LostItemModel = sequelize.define('lost_items', {
     allowNull: false,
     autoIncrement: true,
   },
+  image_url: {
+    type: DataTypes.STRING(200),
+    allowNull: false,
+  },
   item_name: {
     type: DataTypes.STRING(45),
     allowNull: false,
   },
   item_worth: {
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
   date_lost: {
-    type: DataTypes.STRING(45),
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
   location_lost: {
     type: DataTypes.STRING(45),
     allowNull: false,
+  },
+  username: {
+    type: DataTypes.STRING(45),
+    allowNull: false,
+    references: {
+      model: UserModel,
+      key: 'username',
+    },
   },
   phone_number: {
     type: DataTypes.STRING(45),
@@ -34,7 +47,7 @@ const LostItemModel = sequelize.define('lost_items', {
 (async () => {
   try {
     await sequelize.sync({ force: false });
-    console.log(`Payment-gateway Table created successfully.`);
+    console.log(`lostItem Table created successfully.`);
   } catch (error) {
     console.error('Unable to create table:', error);
   }

@@ -13,15 +13,15 @@ const TransactionLSettingsModel = sequelize.define('transactionSettings', {
     autoIncrement: true,
     primaryKey: true,
   },
-  withdrawalCharge: {
+  transferCharge: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  dailyWithdrawalLimit: {
-    type: DataTypes.FLOAT,
+  dailyTransferLimit: {
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
-  monthlyWithdrawalLimit: {
+  monthlyTransferLimit: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
