@@ -1,9 +1,9 @@
 const router = require('express').Router();
 
-const { income, expense } = require('../controllers');
+const { income, expense, allTransactions } = require('../controllers');
 
-router.get('/customer/expense', expense);
-
+router.get('/customer/fetch/transactions', allTransactions);
+router.get('/customer/expenses', expense);
 router.get('/customer/income', income);
-// router.get('/customer/all-transaction', income);
+
 module.exports = router;

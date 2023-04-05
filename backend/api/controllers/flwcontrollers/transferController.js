@@ -158,7 +158,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
     destination_acct: account_number,
     date_time: date,
     status: 'successful',
-    remarks: narration,
+    remark: narration,
   });
 
   console.log('"createTr-----------------------------------nsferLog"');

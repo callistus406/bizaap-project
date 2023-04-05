@@ -194,7 +194,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
     to_receive,
     gateway_id,
     status,
-    remarks,
+    remark,
   }) => {
     const depositedRecord = await DepositModel.create({
       tx_ref_code,
@@ -206,7 +206,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
       to_receive,
       gateway_id,
       status,
-      remarks,
+      remark,
     });
 
     const loggerPayload = {
@@ -251,7 +251,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
         to_receive: creditAmt,
         gateway_id: 1,
         status: txInfo.status,
-        remarks: txInfo.narration,
+        remark: txInfo.narration,
       });
       // gets the current balance from wallet
       const getBalance = await WalletModel.findOne({

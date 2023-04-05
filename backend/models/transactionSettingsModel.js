@@ -14,7 +14,7 @@ const TransactionLSettingsModel = sequelize.define('transactionSettings', {
     primaryKey: true,
   },
   transferCharge: {
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
   dailyTransferLimit: {
