@@ -13,6 +13,14 @@ const otpValidation = require('./otpValidationController');
 const { fetchBal } = require('./flwcontrollers/balanceController');
 const { income, expense, allTransactions } = require('./transactionsController');
 const { registerController } = require('./registerController');
+const {
+  lostItemCtrl,
+  fetchLostItemsCtrl,
+  fetchCustomerLostItems,
+  foundLostItemCtrl,
+  fetchFoundItemsCtrl,
+  fetchCustomerFoundItems,
+} = require('./lostAndFoundController');
 const { getCustomersProfile, updateCustomersProfile } = require('./profileController');
 const {
   cardPayment,
@@ -30,11 +38,17 @@ module.exports = {
   resetPassword,
   confirmResetPassword,
   allTransactions,
+  foundLostItemCtrl,
+  fetchFoundItemsCtrl,
   otpValidation,
   walletTransfer,
   registerController,
   income,
+  fetchCustomerFoundItems,
+  fetchLostItemsCtrl,
+  lostItemCtrl,
   expense,
+  fetchCustomerLostItems,
   authorizeWalletTransfer,
   cardAuthorization,
   bankVerification,

@@ -1,33 +1,33 @@
-const multer = require('multer');
-const fs = require('fs');
-const util = require('util');
-const unlinkFile = util.promisify(fs.unlink);
-const { uploadFile } = require('../../service/awsS3Config');
-const upload = multer({ dest: '/upload' });
 const router = require('express').Router();
+const fs = require('fs');
+const path = require('path');
+const { initiateMediaTransfer } = require('../../service/multerConfig');
+const LostItemModel = require('../../models/lostItemModel');
+const VerifyUser = require('../../middleware/auth');
+const {
+  lostItemCtrl,
+  fetchLostItemsCtrl,
+  fetchCustomerLostItems,
+  foundLostItemCtrl,
+  fetchFoundItemsCtrl,
+  fetchCustomerFoundItems,
+} = require('../controllers');
+router.post(
+  '/register/customer/lost-item',
+  VerifyUser.ensureAuthenticated,
+  initiateMediaTransfer('lost').single('image'),
+  lostItemCtrl
+);
 
-router.post('/images', upload.single('image'), async (req, res) => {
-  const file = req.file;
-  console.log(file);
-
- console.log(uploadFile)
-  // return
-  const response = await uploadFile(file);
-  console.log(response);
-  console.log("-----------------------------------")
-  await unlinkFile(file.path);
-  const description = req.body.description;
-  res.send({ imagePath: `/images/${response.Key}` });
-});
-
-// ------------------------------------------------------
-
-router.get('/images/:key', (req, res) => {
-  console.log(req.params);
-  const key = req.params.key;
-  const readStream = getFileStream(key);
-
-  readStream.pipe(res);
-});
+router.get('/fetch/lost-items', fetchLostItemsCtrl);
+router.get('/fetch/found-items', fetchFoundItemsCtrl);
+router.get('/fetch/customer/lost-items', VerifyUser.ensureAuthenticated, fetchCustomerLostItems);
+router.get('/fetch/customer/found-items', VerifyUser.ensureAuthenticated, fetchCustomerFoundItems);
+router.post(
+  '/customer/register/found-items',
+  VerifyUser.ensureAuthenticated,
+  initiateMediaTransfer('found').single('image'),
+  foundLostItemCtrl
+);
 
 module.exports = router;
