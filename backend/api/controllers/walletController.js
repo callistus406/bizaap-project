@@ -14,7 +14,7 @@ const { default: Decimal } = require('decimal.js');
 
 const createWallet = asyncWrapper(async (req, res, next) => {
   const { walletPin, confirmWalletPin } = req.body;
-  const phone = req.user.dataValues.phone;
+  const phone = req.user.dataValues?.phone;
 
   // this generate account number from phone number
   const accountNumber = generateAccountNumber(phone);
@@ -86,11 +86,14 @@ const createWalletPin = asyncWrapper(async (req, res, next) => {
   return res.status(200).send({ success: true, payload: createPin });
 });
 
+// -------------------------------------------------WALLET TRANSFERS--------------------------------------------------------------------
+
 // This controller initiates wallet transfer
 
 const walletTransfer = asyncWrapper(async (req, res, next) => {
   // get input from user
   let { amount, walletCode, narration } = req.body;
+
   if (!amount || !walletCode) return next(createCustomError('Input field can not be empty', 400));
   // get id og logged in user
   const loggedInUser = req.user?.user_id;
@@ -104,12 +107,21 @@ const walletTransfer = asyncWrapper(async (req, res, next) => {
   const isValid = getWallet.dataValues?.wallet_pin;
   amount = parseFloat(amount);
   const senderBal = parseFloat(getWallet.dataValues?.balance);
+  const senderAcct = getWallet.dataValues.wallet_code;
 
   if (amount <= 0) return next(createCustomError('Invalid amount', 400));
 
   if (amount > senderBal)
     return next(
       createCustomError("Sorry,You don't have sufficient balance to perform this transaction ", 400)
+    );
+
+  if (senderAcct === walletCode)
+    return next(
+      createCustomError(
+        'Sorry,You cannot send money to your account.please check the account number and try again',
+        400
+      )
     );
 
   // store transfer payload to session object
@@ -149,6 +161,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   // get payload from session
   const { amount, walletCode, senderBal, narration, wallet_pin, sender } =
     req.session.transfer_payload;
+  console.log({ amount, walletCode, senderBal, narration, wallet_pin, sender });
   // validate pin
   if (!pin) return next(createCustomError('Invalid Pin', 400));
   // checks if wallet is secure
@@ -189,12 +202,15 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   const recipientsBalance = parseFloat(getRecipientsAcct.dataValues?.balance);
 
   let recipientsFinalBal = recipientsBalance + amount;
+  console.log(senderFinalBal, recipientsBalance, walletCode, recipientsFinalBal);
   // recipientsFinalBal.toFixed(2);
+  console.log('rasas', typeof recipientsBalance, typeof senderBal);
   // update recipients acct
   const updateRecipientsAcct = await WalletModel.update(
     { balance: recipientsFinalBal },
     { where: { wallet_code: walletCode } }
   );
+  console.log(updateRecipientsAcct);
   if (!updateRecipientsAcct[0])
     return next(
       createCustomError(
