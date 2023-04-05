@@ -23,7 +23,7 @@ const LostItemModel = sequelize.define('lost_items', {
     allowNull: false,
   },
   date_lost: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.DATE,
     allowNull: false,
   },
   location_lost: {
@@ -39,7 +39,7 @@ const LostItemModel = sequelize.define('lost_items', {
     },
   },
   phone_number: {
-    type: DataTypes.STRING(45),
+    type: DataTypes.STRING(20),
     allowNull: false,
   },
 });

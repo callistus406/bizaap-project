@@ -44,7 +44,7 @@ const BillsModel = sequelize.define('bills', {
     type: DataTypes.STRING(45),
     allowNull: false,
   },
-  remarks: {
+  remark: {
     type: DataTypes.STRING(100),
     allowNull: false,
   },

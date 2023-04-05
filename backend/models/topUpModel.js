@@ -45,7 +45,7 @@ const TopUpModel = sequelize.define('topUp', {
     type: DataTypes.STRING(45), //TODO:review this
     allowNull: false,
   },
-  remarks: {
+  remark: {
     type: DataTypes.STRING(100),
     allowNull: true, //TODO:review this
   },
