@@ -10,7 +10,7 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const { sequelize } = require('./db/connect');
 const PORT = process.env.PORT || 4000;
 const errorHandler = require('./middleware/errorHandler');
-const cors = require("cors");
+const cors = require('cors');
 // require('./service/flutterwaveConfig');
 
 // store config
@@ -27,7 +27,25 @@ const sessionStore = new SequelizeStore({
 });
 
 // middle wares
-app.use(cors())
+
+app.use(function (err, req, res, next) {
+  if (err instanceof multer.MulterError) {
+    // A Multer error occurred when uploading
+    res.status(500).send({
+      success: false,
+      payload:
+        'An Error occurred while uploading file. please wait for a few seconds and  try again',
+    });
+    // res.status(500).send('Multer error: ' + err.message);
+  } else if (err) {
+    // An unknown error occurred
+    res.status(500).send('Unknown error: ' + err.message);
+  } else {
+    // No error occurred
+    next();
+  }
+});
+app.use(cors());
 app.use(cookiePasser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
