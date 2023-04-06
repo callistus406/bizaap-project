@@ -7,24 +7,30 @@ const WalletModel = require('../../../models/walletModel');
 const TransferModel = require('../../../models/transferModel');
 const Decimal = require('decimal.js');
 const { transactionLogger } = require('../../../utils/transactionLogger');
+const { createCustomError } = require('../../../middleware/customError');
 require('dotenv').config();
 
-const transfer = asyncWrapper(async (req, res) => {
+const transfer = asyncWrapper(async (req, res, next) => {
+  // get logged in user
   const loggedInUser = req.user?.user_id;
+  // generate reference No
   const uniqueId = generateUniqueId();
   let { account_bank, account_number, amount, narration } = req.body;
-  amount = new Decimal(parseFloat(amount));
+  // input validation
   const validateData = req.body;
   const { error } = new TransferValidation(validateData).validate();
   if (error) return res.status(400).send({ success: false, payload: error.message });
+
+  amount = parseFloat(amount);
+  // payload caching
   req.session.transfer_payload = req.body;
   req.session.transfer_payload.currency = 'NGN';
-  req.session.transfer_payload.reference = `TF-${uniqueId}`;
+  req.session.transfer_payload.reference = `TX-${uniqueId}`;
   req.session.transfer_payload.callback_url =
     'https://webhook.site/b3e505b0-fe02-430e-a538-22bbbce8ce0d'; // TODO: change this to custom webhook
   req.session.transfer_payload.debit_currency = 'NGN';
   // reject amounts below 10 naira
-  if (amount.lt(50))
+  if (amount < 50)
     return res.status(400).send({
       success: false,
       payload: 'Sorry, you can not transfer amount below 50 naira',
@@ -35,25 +41,29 @@ const transfer = asyncWrapper(async (req, res) => {
     attributes: ['balance'],
   });
 
-  const balance = new Decimal(getWallet.dataValues.balance);
+  const balance = parseFloat(getWallet.dataValues.balance);
   // balance.toFixed(2);
   //   calc for % of amount entered
-  const percentageCharge = new Decimal(
-    (process.env.BANK_TRANSFER_PERCENTAGE_CHARGE / 100) * amount
-  );
+  const percentageCharge = 0; //!can be adjusted later
+
+  // new Decimal(
+  //   (process.env.BANK_TRANSFER_PERCENTAGE_CHARGE / 100) * amount
+  // );
   // fetches transfer charges from flutterwave
-  const transferFee = await flw.Transfer.fee({ amount, currency: 'NGN' });
+  const transferFee = await flw.Transfer.fee({ amount, currency: process.env.DEFAULT_CURRENCY });
   if (transferFee?.status !== 'success')
     return res
       .status(500)
       .send({ success: false, payload: 'Sorry, Something went wrong, please try again later.' });
   // converts FLW to float
-  const flwCharge = new Decimal(parseFloat(transferFee.data[0].fee));
+  const flwCharge = parseFloat(transferFee.data[0].fee);
 
+  const stampDuty = amount >= 10000 ? parseFloat(process.env.STAMP_DUTY) : 0;
   // adds the amount to withdraw and sys percentage and FLW charge
-  const totalChargesPlusAmt = amount.plus(percentageCharge).plus(flwCharge);
+  const stampDutyPlusFlwCharge = stampDuty + flwCharge;
+  const totalChargesPlusAmt = amount + stampDutyPlusFlwCharge;
   // checks if the total charges and amount is less than clg
-  const totalChargeMinusBal = balance.minus(totalChargesPlusAmt);
+  const totalChargeMinusBal = balance - totalChargesPlusAmt;
 
   // constraints
   if (totalChargeMinusBal < 0)
@@ -62,8 +72,8 @@ const transfer = asyncWrapper(async (req, res) => {
       payload: 'Sorry, You do not have sufficient balance to perform this transaction',
     });
   console.log(typeof totalChargesPlusAmt, balance);
-  if (parseFloat(totalChargesPlusAmt) <= balance) {
-    const finalBalance = balance.minus(totalChargesPlusAmt);
+  if (totalChargesPlusAmt <= balance) {
+    const finalBalance = balance - totalChargesPlusAmt;
     // add transfer details to session body
     //* store payload in user session
     req.session.transfer_payload.auth_url = '/flw/transfer/authorization';
