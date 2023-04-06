@@ -6,7 +6,11 @@ const {
   walletTransfer,
   authorizeWalletTransfer,
 } = require('./walletController');
-const { getBills, buyAirtime } = require('./flwcontrollers/billsController');
+const {
+  createBillPayment,
+  getBillsCategories,
+  validateBiller,
+} = require('./flwcontrollers/billsController');
 const { bankVerification } = require('./flwcontrollers/bankVerification');
 const { getAllBanks } = require('./flwcontrollers/getBanksController');
 const otpValidation = require('./otpValidationController');
@@ -57,9 +61,10 @@ module.exports = {
   createWallet,
   getAllBanks,
   cardPayment,
-  buyAirtime,
   transfer,
   getWallet,
   fetchBal,
-  getBills,
+  createBillPayment,
+  getBillsCategories,
+  validateBiller,
 };
