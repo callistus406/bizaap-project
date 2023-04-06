@@ -1,43 +1,47 @@
 const { Sequelize, DataTypes } = require('sequelize');
 
 const { sequelize } = require('../db/connect');
+const UserModel = require('./userModel');
 
 const BillsModel = sequelize.define('bills', {
-  _id: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false,
-  },
-  billsId: {
+  bills_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  transactionCode: {
+  customer_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: UserModel,
+      key: 'user_id',
+    },
+  },
+
+  flw_ref: {
     type: DataTypes.STRING(45),
     allowNull: false,
   },
-  referenceNumber: {
+  tx_ref: {
     type: DataTypes.STRING(45),
-    autoIncrement: true,
-    primaryKey: true,
+    allowNull: false,
+  },
+  bill_type: {
+    type: DataTypes.STRING(20),
+    allowNull: false,
   },
 
   amount: {
-    type: DataTypes.FLOAT, //TODO: review this
+    type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
   },
-  currencyId: {
-    type: DataTypes.INTEGER, //TODO: review this
-    allowNull: false,
-  },
-  dateTime: {
-    type: DataTypes.DATE,
+  currency: {
+    type: DataTypes.STRING(5),
     allowNull: false,
   },
 
-  paymentGatewayId: {
-    type: DataTypes.INTEGER(11), //:TODO:review this
+  payment_gateway: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   status: {
@@ -53,7 +57,7 @@ const BillsModel = sequelize.define('bills', {
 (async () => {
   try {
     await sequelize.sync({ force: false });
-    console.log(' Deposit Table created successfully.');
+    console.log(' Bills Table created successfully.');
   } catch (error) {
     console.error('Unable to create table:', error);
   }

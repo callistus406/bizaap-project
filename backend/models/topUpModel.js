@@ -1,22 +1,21 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../db/connect');
 const TopUpModel = sequelize.define('topUp', {
-  _id: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false,
-  },
-  topUpId: {
+  topUp_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  transactionCode: {
-    type: DataTypes.STRING(45),
-    autoIncrement: true,
+  transaction_ref: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
   },
-  networkService: {
-    type: DataTypes.STRING(45),
+  flw_ref: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+  },
+  network_service: {
+    type: DataTypes.STRING(10),
     allowNull: false,
   },
   amount: {
@@ -24,30 +23,22 @@ const TopUpModel = sequelize.define('topUp', {
     allowNull: false,
   },
 
-  currencyId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: currency,
-      key: 'id', //TODO: review this
-    },
-  },
-  dateTime: {
-    type: DataTypes.DATE,
+  currency: {
+    type: DataTypes.STRING(5),
     allowNull: false,
   },
-  paymentGatewayId: {
+  payment_gateway: {
     type: DataTypes.INTEGER, //:TODO:review this
     allowNull: false,
   },
 
   status: {
-    type: DataTypes.STRING(45), //TODO:review this
+    type: DataTypes.STRING(12),
     allowNull: false,
   },
   remark: {
     type: DataTypes.STRING(100),
-    allowNull: true, //TODO:review this
+    allowNull: true,
   },
 });
 
