@@ -153,7 +153,7 @@ const walletTransfer = asyncWrapper(async (req, res, next) => {
     },
   });
 });
-
+// --------------------------------------****************************------------------------------------------------------------
 // this controller authorizes customer to proceed with transaction via pin verification
 const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   const loggedInUser = req.user?.user_id;
