@@ -2,25 +2,18 @@
  * *NOTE: THIS CODE HAS NOT BEEN REFACTORED OR OPTIMIZED
  * DEVELOPMENT IS STILL IN PROGRESS
  */
+const { pollPaymentStatus } = require('../../../utils/transactionVerificationJob');
 const { CardPaymentValidation } = require('../../../validation/validation');
+const { transactionLogger } = require('../../../utils/transactionLogger');
 const { createCustomError } = require('../../../middleware/customError');
 const asyncWrapper = require('../../../middleware/asyncWrapper');
 const { generateUniqueId } = require('../../../utils/uniqueIds');
-const GatewayModel = require('../../../models/gatewayModel');
 const DepositModel = require('../../../models/depositModel');
+const GatewayModel = require('../../../models/gatewayModel');
 const WalletModel = require('../../../models/walletModel');
-const { pollPaymentStatus } = require('../../../utils/transactionVerificationJob');
 const flw = require('../../../service/flutterwaveConfig');
-const { transactionLogger } = require('../../../utils/transactionLogger');
 const Decimal = require('decimal.js');
-
 require('dotenv').config();
-const getBankTransferCharge = asyncWrapper(async (req, res) => {});
-
-const initiatePayment = asyncWrapper((req, res) => {
-  const amount = req.body.amount;
-  req.session.charge_payload = amount;
-});
 
 const cardPayment = asyncWrapper(async (req, res, next) => {
   const loggedInUser = req.user?.user_id;
@@ -60,8 +53,8 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
 
   // store secrete properties in session
   payload.enckey = process.env.FLW_ENCRYPTION_KEY;
-  payload.flw_ref = `FLW-${uniqueString}`;
-  payload.tx_ref = `TX-${generateUniqueId()}`;
+  // payload.flw_ref = `FLW-${uniqueString}`;
+  payload.tx_ref = `TX-${uniqueString}`;
 
   // first charge card api call
   const response = await flw.Charge.card(payload);
@@ -73,16 +66,19 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
     if (response.meta.authorization.mode === 'pin') {
       req.session.charge_payload = payload;
       req.session.charge_payload.authorization = response.meta.authorization;
-      req.session.charge_payload.authUrl = "/api/v1/flw/payment/card_payment/authorization'";
-      const convertAmt = parseFloat(payload.amount);
+      req.session.charge_payload.authUrl = "/api/v1/flw/payment/card-payment/authorization'";
+      amount = parseFloat(payload.amount);
       // get charge
-      const percentage = parseFloat(process.env.CARD_TX_PERCENTAGE_CHARGE) / 100;
-      const commission = percentage * convertAmt;
-      const totalCharge = commission + convertAmt;
+      const flwPercentage = parseFloat(process.env.FLW_CARD_PERCENTAGE_CHARGE);
+      const stampDuty = amount >= 10000 ? parseFloat(process.env.STAMP_DUTY) : 0;
+      const percentageCharge = flwPercentage * amount;
+      const commission = percentageCharge + stampDuty;
+      const totalCharge = commission + amount;
       // req.session.charge_payload.toReceive = payload.amount; //amt to get
+  
       req.session.charge_payload.totalDebit = totalCharge; //total debit
       req.session.charge_payload.commission = commission;
-      req.session.charge_payload.toReceive = convertAmt - commission;
+      req.session.charge_payload.toReceive = amount - commission;
       return res.status(200).send({ success: true, payload: req.session.charge_payload });
       // return res.redirect('/api/v1/payment/card_payment/authorization');
     } else {
@@ -159,6 +155,10 @@ const cardAuthorization = asyncWrapper(async (req, res) => {
       }
   }
 });
+
+
+
+
 // !VALIDATES CARD TRANSACTION WITH OTP
 const validateCardTransaction = asyncWrapper(async (req, res) => {
   const loggedInUser = req.user?.user_id;
@@ -239,7 +239,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
     if (transaction.data.status == 'successful') {
       response.tx_redirect = '/api/v1/payment_successful';
       const txInfo = transaction.data;
-      // REMOVES 3% FROM THE DEPOSITED MONEY
+   
       const creditAmt = req.session.charge_payload.toReceive;
       const depositedRecord = await populateDatabase({
         tx_ref_code: txInfo.tx_ref,
@@ -259,9 +259,8 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
         attributes: ['balance'],
       });
       // add the credit amt with the current balance
-      const calcBalance = new Decimal(
-        parseFloat(creditAmt) + parseFloat(getBalance?.dataValues.balance)
-      );
+      const calcBalance =  parseFloat(creditAmt) + parseFloat(getBalance?.dataValues.balance)
+      
       //convert to two precision
       const finalBalance = calcBalance;
       // update user wallet
@@ -292,7 +291,6 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
 });
 
 module.exports = {
-  initiatePayment,
   cardPayment,
   cardAuthorization,
   validateCardTransaction,

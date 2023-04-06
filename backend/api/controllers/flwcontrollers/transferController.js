@@ -24,11 +24,11 @@ const transfer = asyncWrapper(async (req, res, next) => {
   amount = parseFloat(amount);
   // payload caching
   req.session.transfer_payload = req.body;
-  req.session.transfer_payload.currency = 'NGN';
+  req.session.transfer_payload.currency = process.env.DEFAULT_CURRENCY;
   req.session.transfer_payload.reference = `TX-${uniqueId}`;
   req.session.transfer_payload.callback_url =
     'https://webhook.site/b3e505b0-fe02-430e-a538-22bbbce8ce0d'; // TODO: change this to custom webhook
-  req.session.transfer_payload.debit_currency = 'NGN';
+  req.session.transfer_payload.debit_currency = process.env.DEFAULT_CURRENCY;
   // reject amounts below 10 naira
   if (amount < 50)
     return res.status(400).send({
@@ -64,7 +64,7 @@ const transfer = asyncWrapper(async (req, res, next) => {
   const totalChargesPlusAmt = amount + stampDutyPlusFlwCharge;
   // checks if the total charges and amount is less than clg
   const totalChargeMinusBal = balance - totalChargesPlusAmt;
-
+  console.log({ flwCharge, amount, percentageCharge, totalChargesPlusAmt, balance, stampDuty });
   // constraints
   if (totalChargeMinusBal < 0)
     return res.status(400).send({
@@ -98,10 +98,11 @@ const transfer = asyncWrapper(async (req, res, next) => {
   } else {
     return res.status(400).send({
       success: false,
-      payload: 'Sorry, You do not have sufficient balance to perform this transaction0000000000 ',
+      payload: 'Sorry, You do not have sufficient balance to perform this transaction ',
     });
   }
 });
+// -------------------------------------TRANSFER AUTHORIZATION---------------------------------------------------------------------------------
 
 const authorizeTransfer = asyncWrapper(async (req, res) => {
   const loggedInUser = req.user?.user_id;
@@ -179,7 +180,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
     amount: amount,
     customer_id: loggedInUser,
     tx_ref: reference,
-    status: 'successful', //TODO:
+    status: 'successful', //TODO: this will com from flutterwave
   };
   const logTransaction = await transactionLogger(loggerPayload);
 
@@ -187,16 +188,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
 
   return res.status(200).send({
     success: true,
-    payload: {
-      log: createTransferLog,
-      // account: account_number,
-      // amount,
-      // total_debit: totalChargesPlusAmt,
-      // charge: total_charge,
-      // balance: finalBalance,
-      // reference,
-      // date: new Date().toDateString(),
-    },
+    payload: createTransferLog,
   });
 });
 module.exports = { transfer, authorizeTransfer };
