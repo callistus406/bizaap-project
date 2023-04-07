@@ -53,7 +53,7 @@ const getWallet = asyncWrapper(async (req, res) => {
   return res.status(200).send({ success: true, wallet });
 });
 
-// create wallet pin
+//----------------------------------------------------- create wallet pin---------------------------------------
 
 const createWalletPin = asyncWrapper(async (req, res, next) => {
   const { walletPin, confirmWalletPin } = req.body;
@@ -284,10 +284,55 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
 
   return res.send({ senderTxLogger, recipientTxLogger, createRecord2 });
 });
+
+const resetWalletPin = asyncWrapper(async (req, res, next) => {
+  const loggedInUser = req.user?.user_id;
+  const { oldPin, newPin, confirmPin } = req.body;
+
+  if (!oldPin || !newPin || !confirmPin)
+    return next(createCustomError('Inputs cannot be empty!', 400));
+
+  if (isNaN(newPin)) return next(createCustomError('Pin must not contain letters', 400));
+  if (newPin.toString().length !== 4) next(createCustomError('Pin must be 4 digit', 400));
+  newPin.toString();
+  confirmPin.toString();
+  const getWallet = await WalletModel.findOne({
+    where: { wallet_owner: loggedInUser },
+  });
+  const walletPin = getWallet.dataValues?.wallet_pin;
+
+  const isValid = await new UnHashPassword(oldPin, walletPin).unHash();
+
+  if (!isValid) return next(createCustomError('Inccorect  pin', 400));
+
+  if (newPin !== confirmPin) return next(createCustomError('The entered pin does not match', 400));
+
+  const hashedPin = await new HashPassword(newPin).hash();
+
+  if (!hashedPin)
+    return next(createCustomError('Sorry, something went wrong.please try again  later', 500));
+
+  const updatePin = await WalletModel.update(
+    { wallet_pin: hashedPin },
+    { where: { wallet_owner: loggedInUser } }
+  );
+
+  if (!updatePin[0])
+    return next(
+      createCustomError(
+        'Sorry,system is unable to update your wallet pin.please try again later',
+        500
+      )
+    );
+
+  return res.status(200).send({ success: true, payload: 'Wallet pin update, successful!' });
+});
+
 module.exports = {
   getWallet,
   createWallet,
   walletTransfer,
   createWalletPin,
   authorizeWalletTransfer,
+  resetWalletPin,
 };

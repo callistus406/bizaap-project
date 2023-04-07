@@ -14,6 +14,8 @@ const lostItemCtrl = asyncWrapper(async (req, res) => {
   const date = new Date(date_lost);
   if (isNaN(date.getTime()))
     return res.status(400).send({ success: false, payload: 'Please Enter a valid date' });
+  if (!req.file)
+    return res.status(400).send({ success: false, payload: 'Please select an image file' });
   let { destination } = req.file;
   const { username } = req.user;
   destination = destination.slice(1);
@@ -73,13 +75,18 @@ const fetchCustomerLostItems = asyncWrapper(async (req, res) => {
 
 // ----------------------------------------------FOUND SECTION--------------------------------
 const foundLostItemCtrl = asyncWrapper(async (req, res) => {
+  console.log(req.body);
   const { item_name, discovery_location, date_found, pickup_location, phone_number } = req.body;
+  console.log(item_name, discovery_location, date_found, pickup_location, phone_number);
   if (!item_name || !discovery_location || !date_found || !pickup_location || !phone_number)
     return res.status(400).send({ success: false, payload: 'Input fields cannot be empty' });
   //check for invalid date
   const date = new Date(date_found);
   if (isNaN(date.getTime()))
     return res.status(400).send({ success: false, payload: 'Please Enter a valid date' });
+  if (!req.file)
+    return res.status(400).send({ success: false, payload: 'Please select an image file' });
+  console.log(req.file);
   let { destination } = req.file;
   destination = destination.slice(1);
   //   console.log(req.file);

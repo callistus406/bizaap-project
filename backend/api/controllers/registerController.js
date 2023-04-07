@@ -54,7 +54,6 @@ const registerController = asyncWrapper(async (req, res, next) => {
   // const isVerified = await flw.Misc.verify_Account(details);
   // const redirectLink = "/"
   // TODO: verify BVN
-
   // const isVerified = await verifyBvn(bvn)
 
   // if(isVerified.)

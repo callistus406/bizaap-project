@@ -4,6 +4,7 @@ const WalletModel = require('../../models/walletModel');
 const asyncWrapper = require('../../middleware/asyncWrapper');
 const { createCustomError } = require('../../middleware/customError');
 const generateAccountNumber = require('../../utils/accountNumberGen');
+const KycModel = require('../../models/kycModel');
 
 const otpValidation = asyncWrapper(async (req, res, next) => {
   const { token } = req.body;
@@ -46,6 +47,12 @@ const otpValidation = asyncWrapper(async (req, res, next) => {
   // validate returned value
   if (!Object.values(createWallet.dataValues).length > 0)
     next(createCustomError('Sorry, Something went wrong,pleas try again', 500));
+  console.log(createdUser.dataValues.user_id);
+  const createKyc = await KycModel.create({
+    user_id: createdUser.dataValues.user_id,
+    nin_number: '1234567890',
+    photo_url: 'http:/image/upload',
+  });
 
   req.session.customer_details = {};
   req.session.user_otp_auth = '';

@@ -45,14 +45,10 @@ class RegisterValidation extends Validation {
         }),
       phone: joi
         .string()
-
-        .pattern(/^[0-9]+$/)
+        .pattern(/^(\+?\d{1,3}[- ]?)?\d{11}$/) // Phone number regular expression pattern
         .messages({
-          'string.pattern.base': `Phone number must have  at least 10 digits.`,
-        })
-        .min(9)
-        .max(13)
-        .required(),
+          'string.pattern.base': `phone number must have  11 digits.`,
+        }),
       bvn: joi
         .string()
         .pattern(/^\d{10}$/)
@@ -215,7 +211,8 @@ class ProfileValidator extends Validation {
           'string.pattern.base': `phone number must have  11 digits.`,
         }),
 
-      businessName: joi.string().min(4).required(),
+      username: joi.string().min(2).max(20).required(),
+      full_name: joi.string().min(4).max(20).required(),
     });
   }
 

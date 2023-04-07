@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const passport = require('passport');
+const { username } = require('../../utils/getUsername');
 const initializePassport = require('../../authentication/passportConfig');
 const UserModel = require('../../models/userModel');
 const GatewayModel = require('../../models/gatewayModel');
@@ -23,6 +24,8 @@ router.post(
           if (err) {
             return next(err);
           }
+          // username = user.username;
+          // console.log(user);
           // (async function () {
           //   await GatewayModel.create({
           //     gateway_name: 'flutterwave',
