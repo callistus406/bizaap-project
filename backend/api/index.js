@@ -12,6 +12,7 @@ const transfer = require('./routes/flwRoutes/transfer');
 const transactions = require('./routes/transactions');
 // const income = require('./routes/income');
 const billsPayment = require('./routes/flwRoutes/billsPayment');
+const checkKycVeification = require('./routes/kycVerification');
 const lostAndFound = require('./routes/lostAndFound');
 const cardPayment = require('./routes/flwRoutes/receiveCardPayment');
 const bankVerification = require('./routes/flwRoutes/bankVerification');
@@ -19,6 +20,7 @@ const bankVerification = require('./routes/flwRoutes/bankVerification');
 // const failedTransaction = require('./routes/flwRoutes/failedTransaction');
 
 router.use(bankVerification);
+router.use(checkKycVeification);
 router.use(billsPayment);
 router.use(resetPassword);
 router.use(cardPayment);

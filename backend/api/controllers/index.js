@@ -5,6 +5,7 @@ const {
   createWalletPin,
   walletTransfer,
   authorizeWalletTransfer,
+  resetWalletPin,
 } = require('./walletController');
 const {
   createBillPayment,
@@ -34,6 +35,11 @@ const {
 } = require('./flwcontrollers/receiveCardPaymentController');
 
 const { resetPassword, confirmResetPassword } = require('./resetPasswordController');
+const {
+  checkKycVeification,
+  kycVerificationCtrl,
+  kycVerificationFinalStageCtrl,
+} = require('./kycVerficationController');
 module.exports = {
   validateCardTransaction,
   updateCustomersProfile,
@@ -44,6 +50,7 @@ module.exports = {
   allTransactions,
   foundLostItemCtrl,
   fetchFoundItemsCtrl,
+  checkKycVeification,
   otpValidation,
   walletTransfer,
   registerController,
@@ -67,4 +74,7 @@ module.exports = {
   createBillPayment,
   getBillsCategories,
   validateBiller,
+  resetWalletPin,
+  kycVerificationCtrl,
+  kycVerificationFinalStageCtrl,
 };
