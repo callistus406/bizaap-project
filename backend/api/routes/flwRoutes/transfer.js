@@ -1,8 +1,14 @@
 const router = require('express').Router();
 const { transfer, authorizeTransfer } = require('../../controllers');
 const VerifyUser = require('../../../middleware/auth');
-router.post('/flw/transfer', VerifyUser.ensureAuthenticated, transfer);
-router.post('/flw/transfer/authorization', VerifyUser.ensureAuthenticated, authorizeTransfer);
+const { authorizeTransaction } = require('../../../middleware/kycAuth');
+router.post('/flw/transfer', VerifyUser.ensureAuthenticated, authorizeTransaction, transfer);
+router.post(
+  '/flw/transfer/authorization',
+  VerifyUser.ensureAuthenticated,
+  authorizeTransaction,
+  authorizeTransfer
+);
 
 module.exports = router;
 
