@@ -18,7 +18,7 @@ const kycVerificationCtrl = asyncWrapper(async (req, res, next) => {
   const { nin_number } = req.body;
   const { user_id } = req.user;
   console.log('.............');
-  if (!nin_number) return next(createCustomError('Please provide your  NIN '));
+  if (!nin_number) return next(createCustomError('Please provide your  NIN ', 400));
 
   //   query nin verification api :TODO:
 
