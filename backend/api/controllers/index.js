@@ -36,10 +36,10 @@ const {
 
 const { resetPassword, confirmResetPassword } = require('./resetPasswordController');
 const {
-  checkKycVeification,
+  checkKycVerification,
   kycVerificationCtrl,
   kycVerificationFinalStageCtrl,
-} = require('./kycVerficationController');
+} = require('./kycVerificationController');
 module.exports = {
   validateCardTransaction,
   updateCustomersProfile,
@@ -50,7 +50,7 @@ module.exports = {
   allTransactions,
   foundLostItemCtrl,
   fetchFoundItemsCtrl,
-  checkKycVeification,
+  checkKycVerification,
   otpValidation,
   walletTransfer,
   registerController,

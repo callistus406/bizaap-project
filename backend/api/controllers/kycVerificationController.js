@@ -3,7 +3,7 @@ const { createCustomError } = require('../../middleware/customError');
 const KycModel = require('../../models/kycModel');
 const UserModel = require('../../models/userModel');
 require('dotenv').config();
-const checkKycVeification = asyncWrapper(async (req, res) => {
+const checkKycVerification = asyncWrapper(async (req, res) => {
   console.log(req.use);
   const isVerified = await UserModel.findOne({
     where: { user_id: req.user.user_id },
@@ -17,6 +17,7 @@ const checkKycVeification = asyncWrapper(async (req, res) => {
 const kycVerificationCtrl = asyncWrapper(async (req, res, next) => {
   const { nin_number } = req.body;
   const { user_id } = req.user;
+  console.log('.............');
   if (!nin_number) return next(createCustomError('Please provide your  NIN '));
 
   //   query nin verification api :TODO:
@@ -39,9 +40,12 @@ const kycVerificationFinalStageCtrl = asyncWrapper(async (req, res) => {
   const { nin_number } = req.session.kyc_verification;
 
   // get photo url
-  let { destination } = req.file;
-  destination = destination.slice(1);
-  const photo_url = process.env.DOMAIN_NAME + '' + destination;
+  let { path } = req.file;
+  // destination = destination.slice(1);
+  const photo_url = process.env.DOMAIN_NAME + '' + path;
+  // console.log(req.file);
+
+  // return;
   // update kyc table
   const storeKycDetails = await KycModel.create({
     user_id,
@@ -57,8 +61,8 @@ const kycVerificationFinalStageCtrl = asyncWrapper(async (req, res) => {
   // send response
   return res.status(200).send({
     success: true,
-    payload: 'congratulation,your account hasbeen verified.You can now carry out transactions',
+    payload: 'congratulation,your account has been verified.You can now carry out transactions',
   });
 });
 
-module.exports = { checkKycVeification, kycVerificationFinalStageCtrl, kycVerificationCtrl };
+module.exports = { checkKycVerification, kycVerificationFinalStageCtrl, kycVerificationCtrl };

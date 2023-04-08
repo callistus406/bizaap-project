@@ -2,17 +2,24 @@ const router = require('express').Router();
 const VerifyUser = require('../../middleware/auth');
 const { initiateMediaTransfer } = require('../../service/multerConfig');
 const {
-  checkKycVeification,
+  checkKycVerification,
   kycVerificationCtrl,
   kycVerificationFinalStageCtrl,
 } = require('../controllers');
 
-router.get('/customer/check/kyc', VerifyUser.ensureAuthenticated, checkKycVeification);
+router.get('/customer/check/kyc', VerifyUser.ensureAuthenticated, checkKycVerification);
 router.post(
   '/customer/initiate/kyc/verification',
   VerifyUser.ensureAuthenticated,
   kycVerificationCtrl
 );
-// router.post('/customer/complete/kyc/verification/',VerifyUser.ensureAuthenticated, initiateMediaTransfer("kyc_uploads",'').single('image'), kycVerificationFinalStageCtrl);
+router.post(
+  '/customer/complete/kyc/verification',
+  VerifyUser.ensureAuthenticated,
+  (req, res, next) => {
+    initiateMediaTransfer(req, res, next, 'kyc_uploads', '');
+  },
+  kycVerificationFinalStageCtrl
+);
 
 module.exports = router;
