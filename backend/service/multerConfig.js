@@ -2,6 +2,11 @@ const multer = require('multer');
 const path = require('path');
 
 const initiateMediaTransfer = (req, res, next, _path, dest) => {
+  if (_path === 'lost_and_found') {
+  }
+
+  dest = dest === '' ? req.user.username : dest;
+  // if
   const storage = multer.diskStorage({
     destination: `./uploads/${_path}/${dest}`,
     filename: function (req, file, cb) {
@@ -30,7 +35,7 @@ const initiateMediaTransfer = (req, res, next, _path, dest) => {
     limits: { fileSize: 3000000 }, // 3MB
     fileFilter: fileFilter,
   });
-  return upload;
+  return upload.single('image')(req, res, next);
 };
 // console.log('-----------------------');
 // console.log(upload);

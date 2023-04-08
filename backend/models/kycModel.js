@@ -23,7 +23,7 @@ KycModel.init(
       allowNull: false,
     },
     photo_url: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.STRING(200),
       allowNull: false,
     },
   },

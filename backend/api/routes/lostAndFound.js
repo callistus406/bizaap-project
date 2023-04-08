@@ -4,10 +4,10 @@ const path = require('path');
 const { initiateMediaTransfer, InitiateUpload } = require('../../service/multerConfig');
 const LostItemModel = require('../../models/lostItemModel');
 const VerifyUser = require('../../middleware/auth');
-const { username } = require('../../utils/getUsername');
+// const { username } = require('../../utils/getUsername');
 
 console.log('llllllllllllllll');
-console.log('user', username);
+// console.log('user', username);
 const {
   lostItemCtrl,
   fetchLostItemsCtrl,
@@ -16,12 +16,14 @@ const {
   fetchFoundItemsCtrl,
   fetchCustomerFoundItems,
 } = require('../controllers');
-// router.post(
-//   '/register/customer/lost-item',
-//   VerifyUser.ensureAuthenticated,
-//   initiateMediaTransfer('lost_and_found', 'lost').single('image'),
-//   lostItemCtrl
-// );
+router.post(
+  '/register/customer/lost-item',
+  VerifyUser.ensureAuthenticated,
+  (req, res, next) => {
+    initiateMediaTransfer(req, res, next, 'req.user', 'lost');
+  },
+  lostItemCtrl
+);
 
 router.get('/fetch/lost-items', fetchLostItemsCtrl);
 router.get('/fetch/found-items', fetchFoundItemsCtrl);
@@ -31,9 +33,7 @@ router.post(
   '/customer/register/found-items',
   VerifyUser.ensureAuthenticated,
   (req, res, next) => {
-    initiateMediaTransfer(req, res, next, 'lost_and_found', 'found').single('image');
-    console.log(req.body);
-    // next();
+    initiateMediaTransfer(req, res, next, 'lost_and_found', 'found');
   },
   foundLostItemCtrl
 );
