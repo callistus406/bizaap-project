@@ -7,21 +7,25 @@ const TransferModel = require('./transferModel');
 class TransactionLogModel extends Model {}
 TransactionLogModel.init(
   {
-    log_id: {
+    transaction_id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    type: {
-      type: DataTypes.STRING(45),
+    transaction_type: {
+      type: DataTypes.STRING(45), //debit or credit
       allowNull: false,
     },
     amount: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
     },
-    transaction_id: {
-      type: DataTypes.INTEGER,
+    account_number: {
+      type: DataTypes.STRING(10), //accout in qust
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     status: {
@@ -34,11 +38,11 @@ TransactionLogModel.init(
 console.log(TransactionLogModel.belongsTo);
 
 TransactionLogModel.belongsTo(UserModel, {
-  foreignKey: 'user_id',
+  foreignKey: 'customer_id',
   onDelete: 'CASCADE',
 });
 TransactionLogModel.belongsTo(TransferModel, {
-  foreignKey: 'user_id',
+  foreignKey: 'customer_id',
   onDelete: 'CASCADE',
 });
 

@@ -3,6 +3,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../db/connect');
 const UserModel = require('./userModel');
 const GatewayModel = require('./gatewayModel');
+const WalletModel = require('./walletModel');
 
 const DepositModel = sequelize.define('deposit', {
   deposit_id: {
@@ -34,23 +35,14 @@ const DepositModel = sequelize.define('deposit', {
     type: DataTypes.DECIMAL(12, 2), //to  personal acct or another users account
     allowNull: false,
   },
-  receiver: {
-    type: DataTypes.INTEGER, //to  personal acct or another users account
+  account_number: {
+    type: DataTypes.STRING(10), //receivers acct
     allowNull: false,
     references: {
-      model: UserModel,
-      key: 'user_id',
-    },
-    status: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-    },
-    remark: {
-      type: DataTypes.STRING(200),
-      allowNull: true,
+      model: WalletModel,
+      key: 'wallet_code',
     },
   },
-
   gateway_id: {
     type: DataTypes.INTEGER, //:TODO:review this
     allowNull: false,

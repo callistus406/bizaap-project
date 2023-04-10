@@ -1,18 +1,20 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../db/connect');
 const UserModel = require('./userModel');
+const WalletModel = require('./walletModel');
 const TransferModel = sequelize.define('transfer', {
   transfer_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  account_owner: {
-    type: DataTypes.INTEGER,
+
+  sender_account: {
+    type: DataTypes.STRING(10),
     allowNull: false,
     references: {
-      model: UserModel,
-      key: 'user_id',
+      model: WalletModel,
+      key: 'wallet_code',
     },
   },
   transaction_code: {
@@ -39,7 +41,7 @@ const TransferModel = sequelize.define('transfer', {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
-  date_time: {
+  transaction_date: {
     type: DataTypes.DATE,
     allowNull: false,
   },
@@ -47,11 +49,7 @@ const TransferModel = sequelize.define('transfer', {
     type: DataTypes.STRING(45),
     allowNull: false,
   },
-  receiver: {
-    type: DataTypes.STRING(100),
-    allowNull: true,
-  },
-  destination_acct: {
+  destination_account: {
     type: DataTypes.STRING(10),
     allowNull: true,
   },
