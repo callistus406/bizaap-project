@@ -4,15 +4,15 @@ const bcrypt = require('bcrypt');
 const { UnHashPassword } = require('../authentication/password');
 const passport = require('passport');
 
-const initializePassport = (passport, getUserByEmail, getUserById) => {
-  async function authenticateUser(email, password, done) {
-    const validateData = { email, password };
-
+const initializePassport = (passport, getUserByUsername, getUserById) => {
+  async function authenticateUser(username, password, done) {
+    const validateData = { username, password };
+    console.log(username);
     const { error } = new LoginValidation(validateData).validate();
 
     if (error) return done(null, false, { payload: error.message });
 
-    const user = await getUserByEmail(email);
+    const user = await getUserByUsername(username);
 
     if (user == null) return done(null, false, { payload: 'Invalid Credentials' });
     const fetchUser = user?.dataValues;
@@ -31,7 +31,7 @@ const initializePassport = (passport, getUserByEmail, getUserById) => {
     }
   }
 
-  passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser));
+  passport.use(new LocalStrategy({ usernameField: 'username' }, authenticateUser));
   passport.serializeUser((user, done) => done(null, user.user_id));
   passport.deserializeUser(async (id, done) => {
     console.log(id);
