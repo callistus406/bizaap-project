@@ -9,7 +9,7 @@ function emailTemplate(username, email, resetUrl) {
   <body>
     <table align="center" cellpadding="0" cellspacing="0" width="600">
       <tr>
-        <td bgcolor="#ffffff" style="padding: 40px 30px 40px 30px;">
+        <td bgcolor="#f5f5f5" style="padding: 40px 30px 40px 30px;">
           <table cellpadding="0" cellspacing="0" width="100%">
             <tr>
               <td style="text-align: center;">
@@ -23,7 +23,7 @@ function emailTemplate(username, email, resetUrl) {
                 <p>To reset your password, please click the following link:</p>
                 <p><a href="${resetUrl}" style="color: #007bff;">Reset Password</a></p>
                 <p>If the link does not work, please copy and paste the following URL into your browser:</p>
-                <p>[reset link]</p>
+                <p>${resetUrl}</p>
                 <p style="padding-top: 20px;">Thank you,</p>
                 <p>The Tiza Team</p>
               </td>
