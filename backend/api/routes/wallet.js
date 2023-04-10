@@ -43,6 +43,7 @@ router.post(
 router.post(
   '/customer/wallet/transfer/authorization',
   VerifyUser.ensureAuthenticated,
+  authorizeTransaction,
   authorizeWalletTransfer
 );
 
