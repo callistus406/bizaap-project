@@ -312,7 +312,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     amount,
     `TX-${txRef}`,
     receiver_account,
-    'wallet Transfer' ,
+    'wallet Transfer',
     'successful',
     newDate,
     narration
