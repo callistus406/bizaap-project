@@ -7,7 +7,7 @@ const GatewayModel = require('../../models/gatewayModel');
 // const { verifyBvn } = require('../../utils/bvnVerification');
 initializePassport(
   passport,
-  (email) => UserModel.findOne({ where: { email: email } }),
+  (username) => UserModel.findOne({ where: { username: username } }),
   (id) => UserModel.findOne({ where: { user_id: id } })
 );
 router.post(
@@ -34,7 +34,7 @@ router.post(
           //   });
           // })();
           // verifyBvn();
-          return res.redirect('/api/v1/dashboard');
+          return res.redirect('/api/v1/customer/dashboard');
         });
       }
     })(req, res, next);
