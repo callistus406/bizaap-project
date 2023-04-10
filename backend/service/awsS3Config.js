@@ -5,12 +5,7 @@ const bucketName = process.env.AWS_BUCKET_NAME;
 const region = process.env.AWS_BUCKET_REGION;
 const accessKeyId = process.env.AWS_ACCESS_KEY;
 const secreteAccessKey = process.env.AWS_ACCESS_SECRETE_KEY;
-console.log("pppppppppppppppppppppppppppppppppp")
-console.log({
-  region,
-  accessKeyId,
-  secreteAccessKey,
-})
+
 const s3 = new S3({
   region,
   accessKeyId,
@@ -27,7 +22,7 @@ const uploadFile = (file) => {
     accessKeyId,
     secreteAccessKey,
     key: file.filename,
-  })
+  });
   const uploadParams = {
     Bucket: bucketName,
     Body: fileStream,
@@ -41,7 +36,7 @@ const uploadFile = (file) => {
 function downloadFileStream(fileKey) {
   const downloadParams = {
     Key: fileKey,
-    
+
     Bucket: bucketName,
   };
 

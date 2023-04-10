@@ -71,13 +71,7 @@ class LoginValidation extends Validation {
 
   schema() {
     return joi.object({
-      email: joi
-        .string()
-        .email({
-          minDomainSegments: 2,
-          tlds: { allow: ['com', 'net', 'org'] },
-        })
-        .required(),
+      username: joi.string().min(2).max(20).required(),
       password: joi
         .string()
         .pattern(new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$'))

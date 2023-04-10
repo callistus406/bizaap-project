@@ -18,7 +18,6 @@ async function sendResetEmail(email, resetUrl) {
       rejectUnauthorized: false,
     },
   });
-  console.log('-----------iiii-------------------');
 
   const mailOptions = {
     from: process.env.EMAIL_SERVER_USERNAME,
@@ -28,8 +27,6 @@ async function sendResetEmail(email, resetUrl) {
   };
 
   const isSent = await transporter.sendMail(mailOptions);
-  console.log('------------------------------');
-  console.log(isSent);
 }
 
 module.exports = { sendResetEmail };
