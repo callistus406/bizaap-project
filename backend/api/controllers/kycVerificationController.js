@@ -35,12 +35,14 @@ const kycVerificationCtrl = asyncWrapper(async (req, res, next) => {
     .send({ success: true, payload: { redirectUrl: '/customer/complete/kyc/verification' } });
 });
 
-const kycVerificationFinalStageCtrl = asyncWrapper(async (req, res) => {
+const kycVerificationFinalStageCtrl = asyncWrapper(async (req, res, next) => {
   const { user_id } = req.user;
 
   const { nin_number } = req.session.kyc_verification;
 
   // get photo url
+  if (!req.file)
+    return next(createCustomError('Please upload a photo of your national ID card', 400));
   let { path } = req.file;
   // destination = destination.slice(1);
   const photo_url = process.env.DOMAIN_NAME + '' + path;
