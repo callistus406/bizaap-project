@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-router.get('/dashboard', (req, res) => {
+router.get('/customer/dashboard', (req, res) => {
   res.send({ success: true, payload: 'Dashboard route' });
 });
 

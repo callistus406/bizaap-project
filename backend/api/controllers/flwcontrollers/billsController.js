@@ -19,7 +19,7 @@ const getBillsCategories = asyncWrapper(async (req, res) => {
 
   const response = await flw.Bills.fetch_bills_Cat();
   if (Object.keys(response).length === 0)
-    return next(createCustomError('Sorry,System is unable to get bills category', 400));
+    return next(createCustomError('Sorry,System is unable to get bills category', 500));
   return res.status(200).send({ success: true, payload: response });
 });
 

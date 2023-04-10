@@ -75,7 +75,7 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
       const commission = percentageCharge + stampDuty;
       const totalCharge = commission + amount;
       // req.session.charge_payload.toReceive = payload.amount; //amt to get
-  
+
       req.session.charge_payload.totalDebit = totalCharge; //total debit
       req.session.charge_payload.commission = commission;
       req.session.charge_payload.toReceive = amount - commission;
@@ -88,9 +88,7 @@ const cardPayment = asyncWrapper(async (req, res, next) => {
       });
     }
   } else {
-    return res
-      .status(400)
-      .send({ success: false, payload: { message: 'sorry something went wrong' } });
+    return res.status(400).send({ success: false, payload: 'sorry something went wrong' });
   }
   // Authorizing transactions
 });
@@ -156,9 +154,6 @@ const cardAuthorization = asyncWrapper(async (req, res) => {
   }
 });
 
-
-
-
 // !VALIDATES CARD TRANSACTION WITH OTP
 const validateCardTransaction = asyncWrapper(async (req, res) => {
   const loggedInUser = req.user?.user_id;
@@ -221,12 +216,15 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
     console.log(isUpdated);
     return depositedRecord;
   };
+  // get otp
   const otp = req.body.otp;
+  if (!otp) return next(createCustomError('OTP field must not be empty', 400));
 
   const response = await flw.Charge.validate({
     otp: otp,
     flw_ref: req.session.charge_payload.flw_ref,
   });
+
   if (response?.data?.status === 'successful' || response?.data?.status === 'pending') {
     // Verify the payment
     const transactionId = response?.data?.id;
@@ -239,7 +237,7 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
     if (transaction.data.status == 'successful') {
       response.tx_redirect = '/api/v1/payment_successful';
       const txInfo = transaction.data;
-   
+
       const creditAmt = req.session.charge_payload.toReceive;
       const depositedRecord = await populateDatabase({
         tx_ref_code: txInfo.tx_ref,
@@ -259,8 +257,8 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
         attributes: ['balance'],
       });
       // add the credit amt with the current balance
-      const calcBalance =  parseFloat(creditAmt) + parseFloat(getBalance?.dataValues.balance)
-      
+      const calcBalance = parseFloat(creditAmt) + parseFloat(getBalance?.dataValues.balance);
+
       //convert to two precision
       const finalBalance = calcBalance;
       // update user wallet
@@ -268,6 +266,8 @@ const validateCardTransaction = asyncWrapper(async (req, res) => {
         { balance: finalBalance },
         { where: { wallet_owner: loggedInUser } }
       );
+      req.session.charge_payload = {};
+
       return res.status(200).send({ success: true, payload: depositedRecord, transaction });
       // return res.status(200).send({ success: true, payload: transaction });
       // TODO: refund or decline payment

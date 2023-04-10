@@ -3,21 +3,22 @@ const { createCustomError } = require('../../middleware/customError');
 const KycModel = require('../../models/kycModel');
 const UserModel = require('../../models/userModel');
 require('dotenv').config();
-const checkKycVerification = asyncWrapper(async (req, res) => {
+const checkKycVerification = asyncWrapper(async (req, res, next) => {
   console.log(req.use);
   const isVerified = await UserModel.findOne({
     where: { user_id: req.user.user_id },
     include: KycModel,
   });
 
-  res.send(isVerified);
+  if (isVerified) return next(createCustomError('Your account has not been verified.', 400));
+
+  return res.status(200).send({ success: true, payload: 'Your Account is verified' });
 });
 
 // ------------------------create kyc
 const kycVerificationCtrl = asyncWrapper(async (req, res, next) => {
   const { nin_number } = req.body;
   const { user_id } = req.user;
-  console.log('.............');
   if (!nin_number) return next(createCustomError('Please provide your  NIN ', 400));
 
   //   query nin verification api :TODO:

@@ -74,8 +74,8 @@ const fetchCustomerLostItems = asyncWrapper(async (req, res) => {
 });
 
 // ----------------------------------------------FOUND SECTION--------------------------------
+
 const foundLostItemCtrl = asyncWrapper(async (req, res) => {
-  console.log(req);
   const { item_name, discovery_location, date_found, pickup_location, phone_number } = req.body;
   console.log(item_name, discovery_location, date_found, pickup_location, phone_number);
   if (!item_name || !discovery_location || !date_found || !pickup_location || !phone_number)

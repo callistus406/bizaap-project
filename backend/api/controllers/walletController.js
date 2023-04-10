@@ -11,8 +11,11 @@ const DepositModel = require('../../models/depositModel');
 const WalletModel = require('../../models/walletModel');
 const UserModel = require('../../models/userModel');
 const { default: Decimal } = require('decimal.js');
+const { receiptGenerator } = require('../../utils/receiptGenerator');
+const { date } = require('joi');
 
 const createWallet = asyncWrapper(async (req, res, next) => {
+  // !NOT FUNCTIONAL FOR NOW
   const { walletPin, confirmWalletPin } = req.body;
   const phone = req.user.dataValues?.phone;
 
@@ -44,11 +47,12 @@ const createWallet = asyncWrapper(async (req, res, next) => {
 });
 
 const getWallet = asyncWrapper(async (req, res) => {
-  const wallet = await WalletModel.findOne({ where: { wallet_owner: req.user.user_id } });
+  const { user_id } = req.user;
+  const wallet = await WalletModel.findOne({ where: { wallet_owner: user_id } });
 
   if (!wallet)
     return res
-      .status(200)
+      .status(404)
       .send({ success: false, payload: "Sorry, You don't have a wallet.Please create One " });
   return res.status(200).send({ success: true, wallet });
 });
@@ -58,32 +62,35 @@ const getWallet = asyncWrapper(async (req, res) => {
 const createWalletPin = asyncWrapper(async (req, res, next) => {
   const { walletPin, confirmWalletPin } = req.body;
   const loggedInUser = req.user?.user_id;
-
   //   validation
   if (!walletPin || !confirmWalletPin)
     return res.status(400).send({ success: false, payload: 'Inputs can not be empty' });
   if (isNaN(walletPin) || isNaN(confirmWalletPin))
     return res.status(400).send({ success: false, payload: 'Pin cannot be a  string' });
+
   if (walletPin.length !== 4 || confirmWalletPin.length !== 4)
     return res.status(400).send({ success: false, payload: 'Wallet pin must be 4 digits' });
+
   if (walletPin !== confirmWalletPin)
     return res
       .status(400)
       .send({ success: false, payload: 'The provided pin do not match, please try again' });
   const hashedPin = await new HashPassword(walletPin).hash();
   if (!hashedPin)
-    return next(createCustomError('Sorry!, Something went wrong,please try again later', 400));
+    return next(createCustomError('Sorry!, Something went wrong,please try again later', 500));
   const createPin = await WalletModel.update(
     { wallet_pin: hashedPin },
     { where: { wallet_owner: loggedInUser } }
   );
-  if (!createPin)
-    return next(createCustomError('Sorry!, Something went wrong,please try again later', 500));
+  // if (!createPin)
+  //   return next(createCustomError('Sorry!, Something went wrong,please try again later', 500));
   if (!createPin[0])
     return next(
       createCustomError('Sorry!, System is unable to create pin. please try again later', 500)
     );
-  return res.status(200).send({ success: true, payload: createPin });
+  return res
+    .status(200)
+    .send({ success: true, payload: 'Your wallet PIN has been successfully updated.' });
 });
 
 // -------------------------------------------------WALLET TRANSFERS--------------------------------------------------------------------
@@ -129,11 +136,13 @@ const walletTransfer = asyncWrapper(async (req, res, next) => {
   req.session.transfer_payload.amount = amount;
   req.session.transfer_payload.narration = narration;
   req.session.transfer_payload.senderBal = senderBal;
-  req.session.transfer_payload.walletCode = walletCode;
+  req.session.transfer_payload.receiver_account = walletCode;
   req.session.transfer_payload.wallet_pin = getWallet.dataValues.wallet_pin
     ? getWallet.dataValues.wallet_pin
     : null;
-  req.session.transfer_payload.sender = getWallet.dataValues.user.full_name;
+  req.session.transfer_payload.sender_account = getWallet.dataValues.wallet_code;
+
+  req.session.transfer_payload.sender_name = getWallet.dataValues.user.full_name;
 
   // check if user has a wallet pin
   if (!isValid)
@@ -159,9 +168,24 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   const loggedInUser = req.user?.user_id;
   const { pin } = req.body;
   // get payload from session
-  const { amount, walletCode, senderBal, narration, wallet_pin, sender } =
-    req.session.transfer_payload;
-  console.log({ amount, walletCode, senderBal, narration, wallet_pin, sender });
+  const {
+    amount,
+    receiver_account,
+    senderBal,
+    narration,
+    wallet_pin,
+    sender_account,
+    sender_name,
+  } = req.session.transfer_payload;
+  console.log({
+    amount,
+    receiver_account,
+    senderBal,
+    narration,
+    wallet_pin,
+    sender_account,
+    sender_name,
+  });
   // validate pin
   if (!pin) return next(createCustomError('Invalid Pin', 400));
   // checks if wallet is secure
@@ -170,7 +194,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   // compare pin
   const unHashedPin = await new UnHashPassword(pin, wallet_pin).unHash();
   if (!unHashedPin) return next(createCustomError('Incorrect Pin', 400));
-  if (!req.session.transfer_payload.amount || !req.session.transfer_payload.walletCode)
+  if (!req.session.transfer_payload.amount || !req.session.transfer_payload.receiver_account)
     return next(createCustomError('Sorry you are not authorized to access this resource', 401));
 
   let senderFinalBal = senderBal - amount;
@@ -189,7 +213,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     );
   // ------------------ RECIPIENT----------------------------------
   const getRecipientsAcct = await WalletModel.findOne({
-    where: { wallet_code: walletCode },
+    where: { wallet_code: receiver_account },
     include: { model: UserModel },
   });
 
@@ -202,13 +226,13 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   const recipientsBalance = parseFloat(getRecipientsAcct.dataValues?.balance);
 
   let recipientsFinalBal = recipientsBalance + amount;
-  console.log(senderFinalBal, recipientsBalance, walletCode, recipientsFinalBal);
+  console.log(senderFinalBal, recipientsBalance, receiver_account, recipientsFinalBal);
   // recipientsFinalBal.toFixed(2);
   console.log('rasas', typeof recipientsBalance, typeof senderBal);
   // update recipients acct
   const updateRecipientsAcct = await WalletModel.update(
     { balance: recipientsFinalBal },
-    { where: { wallet_code: walletCode } }
+    { where: { wallet_code: receiver_account } }
   );
   console.log(updateRecipientsAcct);
   if (!updateRecipientsAcct[0])
@@ -225,21 +249,18 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   const transactionCode = generateTXCode();
   // populate transfer table
   const createRecord = await TransferModel.create({
-    account_owner: loggedInUser,
+    sender_account: sender_account,
     transaction_code: `DM-${transactionCode}`,
     transaction_ref: `TX-${txRef}`,
     amount: amount,
-    charged: 0,
+    charged: process.env.WALLET_TX_CHARGE,
     to_receive: amount,
+    transaction_date: newDate,
     currency: 'NGN',
-    destination_acct: walletCode,
-    receiver: getRecipientsAcct.dataValues.user.full_name,
-    date_time: newDate,
+    destination_account: receiver_account,
     status: 'successful',
     remark: narration,
   });
-
-  // console.log('ddddddddddddddddddddddd');
 
   // console.log(createRecord);
   if (!createRecord)
@@ -247,42 +268,56 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   // populate transaction log table
 
   const senderTxPayload = {
-    type: 'Transfer',
+    transaction_type: 'Debit',
     amount: amount,
-    customer_id: loggedInUser,
+    account_number: sender_account,
     tx_ref: `TX-${txRef}`,
+    description: 'Wallet Transfer',
     status: 'successful',
+    customer_id: loggedInUser,
   };
 
   const senderTxLogger = await transactionLogger(senderTxPayload);
 
-  const createRecord2 = await DepositModel.create({
-    depositor: sender,
-    transaction_code: `DM-${transactionCode}`,
-    tx_ref_code: `TX-${txRef}`,
-    amount: amount,
-    to_receive: amount,
-    currency: 'NGN',
-    receiver: getRecipientsAcct.dataValues.user?.user_id,
-    status: 'successful',
-    gateway_id: 1,
-    remark: narration,
-  });
-
   // // recipient
+
+  // const createRecord2 = await DepositModel.create({
+  //   depositor: sender_name,
+  //   transaction_code: `DM-${transactionCode}`,
+  //   tx_ref_code: `TX-${txRef}`,
+  //   amount: amount,
+  //   to_receive: amount,
+  //   currency: 'NGN',
+  //   account_number: receiver_account,
+  //   status: 'successful',
+  //   gateway_id: process.env.PAYMENT_GATEWAY,
+  //   remark: narration,
+  // });
+
   const recipientTxPayload = {
-    type: 'Deposit',
+    transaction_type: 'Credit',
     amount: amount,
-    customer_id: getRecipientsAcct.dataValues?.wallet_owner,
+    account_number: receiver_account,
+    description: 'Wallet Transfer',
     tx_ref: `TX-${txRef}`,
     status: 'successful',
+    customer_id: getRecipientsAcct.dataValues.user.user_id,
   };
   const recipientTxLogger = await transactionLogger(recipientTxPayload);
 
   // delete payload from session
   req.session.transfer_payload = {};
-
-  return res.send({ senderTxLogger, recipientTxLogger, createRecord2 });
+  const receipt = receiptGenerator(
+    'Debit',
+    amount,
+    `TX-${txRef}`,
+    receiver_account,
+    'wallet Transfer' ,
+    'successful',
+    newDate,
+    narration
+  );
+  return res.status(200).send({ success: true, payload: receipt });
 });
 
 const resetWalletPin = asyncWrapper(async (req, res, next) => {
