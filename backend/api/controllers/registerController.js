@@ -9,6 +9,9 @@ const { HashPassword } = require('../../authentication/password');
 const { RegisterValidation } = require('../../validation/validation');
 const { createCustomError } = require('../../middleware/customError');
 const generateAccountNumber = require('../../utils/accountNumberGen');
+const { sendSMS } = require('../../service/twilioConfig');
+const { sendSMSOTP, sendSMSOtp } = require('../../utils/sendOtpViaSMS');
+require('dotenv').config();
 // const { verifyBvn } = require('../../utils/bvnVerification');
 
 // ---------------------------------------------------------------------------
@@ -64,11 +67,14 @@ const registerController = asyncWrapper(async (req, res, next) => {
   req.session.customer_details.username = username;
   req.session.customer_details.bvn = bvn;
   req.session.customer_details.full_name = full_name;
-
-  sendMailOTP(email, 'redirectLink', req);
+  const response = await sendSMSOtp(process.env.TWILIO_FROM_NUMBER, phone, req);
+  if (!response)
+    return next(
+      createCustomError('System is unable to connect to your phone.please try again later', 500)
+    );
   return res.status(200).json({
     success: true,
-    payload: { message: `OTP has been sent to ${email}`, authUrl: '/customer/validate_otp' },
+    payload: { message: `OTP has been sent to ${phone}`, authUrl: '/customer/validate_otp' },
   });
 
   // response
