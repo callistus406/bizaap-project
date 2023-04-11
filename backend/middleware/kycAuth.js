@@ -1,7 +1,7 @@
 const KycModel = require('../models/kycModel');
 const UserModel = require('../models/userModel');
 const asyncWrapper = require('./asyncWrapper');
-
+require('dotenv').config();
 const authorizeTransaction = asyncWrapper(async (req, res, next) => {
   const { user_id } = req.user;
   const getUserinfo = await KycModel.findOne({ where: { user_id } });
@@ -12,7 +12,7 @@ const authorizeTransaction = asyncWrapper(async (req, res, next) => {
       payload: {
         message:
           "Sorry, You'are allowed to carryout any transaction.Please complete your KYC verification",
-        redirectUrl: '/customer/initiate/kyc/verification',
+        redirectUrl: `${process.env.DOMAIN_NAME}/customer/initiate/kyc/verification`,
       },
     });
   next();

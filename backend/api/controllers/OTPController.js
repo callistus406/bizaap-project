@@ -5,7 +5,8 @@ const asyncWrapper = require('../../middleware/asyncWrapper');
 const { createCustomError } = require('../../middleware/customError');
 const generateAccountNumber = require('../../utils/accountNumberGen');
 const KycModel = require('../../models/kycModel');
-
+const { sendSMSOtp } = require('../../utils/sendOtpViaSMS');
+require('dotenv').config();
 const otpValidation = asyncWrapper(async (req, res, next) => {
   const { token } = req.body;
   if (!token) return next(createCustomError('Input cannot be empty', 400));
@@ -52,4 +53,18 @@ const otpValidation = asyncWrapper(async (req, res, next) => {
   return res.status(201).json({ success: true, payload: createdUser, createWallet });
 });
 
-module.exports = otpValidation;
+const requestOtp = asyncWrapper(async (req, res) => {
+  const { phone } = req.session.customer_details;
+  const response = await sendSMSOtp(preocess.env.TWILIO_FROM_NUMBER, phone, req);
+
+  if (!response)
+    return next(
+      createCustomError('System is unable to connect to your phone.please try again later', 500)
+    );
+  return res.status(200).json({
+    success: true,
+    payload: { message: `OTP has been sent to ${phone}`, authUrl: '/customer/validste-otp' },
+  });
+});
+
+module.exports = { otpValidation, requestOtp };

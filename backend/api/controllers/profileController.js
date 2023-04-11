@@ -3,7 +3,6 @@ const UserModel = require('../../models/userModel');
 const asyncWrapper = require('../../middleware/asyncWrapper');
 const { ProfileValidator } = require('../../validation/validation');
 const { createCustomError } = require('../../middleware/customError');
-
 const getCustomersProfile = asyncWrapper(async (req, res) => {
   const { user_id } = req.user;
 
@@ -11,7 +10,6 @@ const getCustomersProfile = asyncWrapper(async (req, res) => {
     where: { user_id },
     attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
   });
-
   if (!userProfile)
     return res.status(500).send({ success: false, payload: 'Sorry something went wrong' });
 
@@ -34,8 +32,13 @@ const updateCustomersProfile = asyncWrapper(async (req, res, next) => {
     return next(
       createCustomError('phone number is already registered.Please try another phone number', 400)
     );
-
-  const isUsernameReg = await UserModel.findOne({ where: { username: newUsername } });
+  const isUsernameReg = await UserModel.findOne({
+    where: {
+      username: {
+        [Op.regexp]: `(${username}|${username.toUpperCase()})`,
+      },
+    },
+  });
   if (isUsernameReg && isUsernameReg.dataValues.username !== username)
     return next(createCustomError('Username  is already taken.Please try another name', 400));
 

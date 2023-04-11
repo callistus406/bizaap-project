@@ -74,7 +74,7 @@ const registerController = asyncWrapper(async (req, res, next) => {
     );
   return res.status(200).json({
     success: true,
-    payload: { message: `OTP has been sent to ${phone}`, authUrl: '/customer/validate_otp' },
+    payload: { message: `OTP has been sent to ${phone}`, authUrl: '/customer/validste-otp' },
   });
 
   // response

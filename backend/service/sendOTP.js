@@ -38,7 +38,6 @@ async function sendMailOTP(email, resetUrl, req) {
       rejectUnauthorized: false,
     },
   });
-  console.log('-----------iiii-------------------');
 
   const mailOptions = {
     from: process.env.EMAIL_SERVER_USERNAME,
@@ -59,8 +58,6 @@ async function sendMailOTP(email, resetUrl, req) {
   };
 
   const isSent = await transporter.sendMail(mailOptions);
-  console.log('------------------------------');
-  console.log(isSent);
 }
 
 module.exports = { sendMailOTP };

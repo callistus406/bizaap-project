@@ -6,6 +6,7 @@ const { HashPassword } = require('../../authentication/password');
 const { createCustomError } = require('../../middleware/customError');
 const ResetPasswordModel = require('../../models/resetPasswordModel');
 const { EmailValidation, PasswordValidation } = require('../../validation/validation');
+require('dotenv').config();
 const resetPassword = asyncWrapper(async (req, res, next) => {
   const email = req.body.email;
   const { error } = new EmailValidation({ email: email }).validate();
@@ -17,7 +18,7 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
   const isTrue = await storeResetToken(email, resetToken);
 
   // send an email to the user with a link that includes the reset token
-  const resetUrl = `/customer/reset_password/${resetToken}`;
+  const resetUrl = `${process.env.DOMAIN_NAME}customer/reset_password/${resetToken}`;
   // send email to the customer
   const message = await sendResetEmail(email, resetUrl);
   // return a response indicating that the reset request was successful
@@ -52,8 +53,6 @@ async function storeResetToken(email, token) {
 }
 
 async function updatePassword(email, password, next) {
-  // hash the new password using a library like `bcrypt`
-
   // return;
   const hashPassword = await new HashPassword(password).hash();
 

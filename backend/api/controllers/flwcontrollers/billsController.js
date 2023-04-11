@@ -12,7 +12,7 @@ const TransferModel = require('../../../models/transferModel');
 const { transactionLogger } = require('../../../utils/transactionLogger');
 require('dotenv').config();
 
-// *********************THE FE MAKES REQUEST FIRST TO BILLS CATEGORY TO GET THE INF**************************************
+// *********************THE FE MAKES REQUEST FIRST TO BILLS CATEGORY TO GET THE INFO**************************************
 
 const getBillsCategories = asyncWrapper(async (req, res) => {
   const loggedInUser = req.user?.user_id;
@@ -43,6 +43,7 @@ const createBillPayment = asyncWrapper(async (req, res, next) => {
   const walletBalance = parseFloat(getWallet.dataValues?.balance);
   // verify amount is of type number
   if (!Number.isNaN(amount)) return next(createCustomError('please enter a valid amount', 400));
+
   // convert amount to float
   amount = parseFloat(amount);
   // check if customer wallet is secure

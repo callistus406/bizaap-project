@@ -4,6 +4,7 @@ const passport = require('passport');
 const initializePassport = require('../../authentication/passportConfig');
 const UserModel = require('../../models/userModel');
 const GatewayModel = require('../../models/gatewayModel');
+const { sendSMS } = require('../../service/twilioConfig');
 // const { verifyBvn } = require('../../utils/bvnVerification');
 initializePassport(
   passport,
@@ -24,7 +25,7 @@ router.post(
           if (err) {
             return next(err);
           }
-          // username = user.username;
+          // username = 3user.username;
           // console.log(user);
           // (async function () {
           //   await GatewayModel.create({
