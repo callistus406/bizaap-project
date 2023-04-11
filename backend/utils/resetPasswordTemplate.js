@@ -1,3 +1,4 @@
+require('dotenv').config();
 function emailTemplate(username, email, resetUrl) {
   return `
         <!DOCTYPE html>
@@ -21,7 +22,7 @@ function emailTemplate(username, email, resetUrl) {
                 <p>Dear ${email},</p>
                 <p>We have received a request to reset your password. If you did not request this, please ignore this email.</p>
                 <p>To reset your password, please click the following link:</p>
-                <p><a href="${resetUrl}" style="color: #007bff;">Reset Password</a></p>
+                <p><a href="{resetUrl}" style="color: #007bff;">Reset Password</a></p>
                 <p>If the link does not work, please copy and paste the following URL into your browser:</p>
                 <p>${resetUrl}</p>
                 <p style="padding-top: 20px;">Thank you,</p>
