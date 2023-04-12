@@ -14,10 +14,14 @@ const { sendSMSOTP, sendSMSOtp } = require('../../utils/sendOtpViaSMS');
 require('dotenv').config();
 // const { verifyBvn } = require('../../utils/bvnVerification');
 
-// ---------------------------------------------------------------------------
+// ----------------------------- FRONT END WILL SEND NULL IF USER CHOOSES INDIVIDUAL----------------------------------------------
 const registerController = asyncWrapper(async (req, res, next) => {
-  const { email, fullName, username, bvn, phone, password, confirmPassword } = req.body;
+  // business name must contain  null or a string
+  const { email, fullName, username, bvn, businessName, phone, password, confirmPassword } =
+    req.body;
   const validateData = { email, fullName, username, phone, password, bvn };
+  if (businessName && businessName.length < 5)
+    return next(createCustomError('Please select a valid a business name', 400)); //TODO:review this
   // payload validation
   const { error } = new RegisterValidation(validateData).checkValidation();
   if (error) return res.status(200).json({ success: false, payload: error.message });
@@ -67,6 +71,7 @@ const registerController = asyncWrapper(async (req, res, next) => {
   req.session.customer_details.username = username;
   req.session.customer_details.bvn = bvn;
   req.session.customer_details.full_name = full_name;
+  req.session.customer_details.business_name = businessName;
   const response = await sendSMSOtp(process.env.TWILIO_FROM_NUMBER, phone, req);
   if (!response)
     return next(
