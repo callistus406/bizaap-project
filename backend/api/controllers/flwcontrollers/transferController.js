@@ -8,6 +8,7 @@ const TransferModel = require('../../../models/transferModel');
 const Decimal = require('decimal.js');
 const { transactionLogger } = require('../../../utils/transactionLogger');
 const { createCustomError } = require('../../../middleware/customError');
+const UserModel = require('../../../models/userModel');
 require('dotenv').config();
 
 const transfer = asyncWrapper(async (req, res, next) => {
@@ -15,15 +16,15 @@ const transfer = asyncWrapper(async (req, res, next) => {
   const loggedInUser = req.user?.user_id;
   // generate reference No
   const uniqueId = generateUniqueId();
-  let { account_bank, account_number, amount, narration } = req.body;
+  let { account_bank: account_number, amount, narration } = req.body;
   // input validation
   const validateData = req.body;
   const { error } = new TransferValidation(validateData).validate();
   if (error) return res.status(400).send({ success: false, payload: error.message });
-
+  if (isNaN(amount)) return next(createCustomError('Please enter a valid amount', 400));
   amount = parseFloat(amount);
   // payload caching
-  req.session.transfer_payload = req.body;
+  req.session.transfer_payload = { account_number, amount, narration };
   req.session.transfer_payload.currency = process.env.DEFAULT_CURRENCY;
   req.session.transfer_payload.reference = `TX-${uniqueId}`;
   req.session.transfer_payload.callback_url =
@@ -46,9 +47,6 @@ const transfer = asyncWrapper(async (req, res, next) => {
   //   calc for % of amount entered
   const percentageCharge = 0; //!can be adjusted later
 
-  // new Decimal(
-  //   (process.env.BANK_TRANSFER_PERCENTAGE_CHARGE / 100) * amount
-  // );
   // fetches transfer charges from flutterwave
   const transferFee = await flw.Transfer.fee({ amount, currency: process.env.DEFAULT_CURRENCY });
   if (transferFee?.status !== 'success')
@@ -77,7 +75,7 @@ const transfer = asyncWrapper(async (req, res, next) => {
     // add transfer details to session body
     //* store payload in user session
     req.session.transfer_payload.auth_url = '/flw/transfer/authorization';
-    req.session.transfer_payload.wallet_pin_url = '/customer/wallet/create_pin';
+    req.session.transfer_payload.wallet_pin_url = '/customer/wallet/create-pin';
     req.session.transfer_payload.charge_details = {};
     req.session.transfer_payload.charge_details.finalBalance = finalBalance;
     req.session.transfer_payload.charge_details.total_charge = percentageCharge + flwCharge;
@@ -94,6 +92,8 @@ const transfer = asyncWrapper(async (req, res, next) => {
           redirect_url: req.session.transfer_payload.wallet_pin_url,
         },
       });
+    console.log('------------------------');
+    console.log(req.session.transfer_payload);
     return res.status(200).send({ success: true, payload: req.session.transfer_payload });
   } else {
     return res.status(400).send({
@@ -109,7 +109,10 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
   // get pin from customer
   const wallet_pin = req.body.wallet_pin;
   // find customer wallet
-  const wallet = await WalletModel.findOne({ where: { wallet_owner: loggedInUser } });
+  const wallet = await WalletModel.findOne({
+    where: { wallet_owner: loggedInUser },
+  });
+  // return res.send({ wallet });
   // un-hash and compare wallet pin
   const unHashedPin = await new UnHashPassword(wallet_pin, wallet.wallet_pin).unHash();
   if (!unHashedPin) return res.status(400).send({ success: false, payload: 'Incorrect Pin' });
@@ -151,6 +154,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
       where: { wallet_owner: loggedInUser },
     }
   );
+  const loggedInUserAcct = wallet.dataValues.wallet_code;
   // send charges, account ,transfer ref, date, dest acct name, bal description
   if (!updateCustomerWallet[0])
     return res.status(500).send({ success: false, payload: 'SORRY SOMETHING WENT WRONG' });
@@ -158,7 +162,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
   // TODO: dynamic values will come from flw
 
   const createTransferLog = await TransferModel.create({
-    account_owner: loggedInUser,
+    sender_account: loggedInUserAcct,
     transaction_code: 'dsdsd',
     transaction_ref: reference,
     amount: amount,
@@ -167,7 +171,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
     to_receive: amount,
     receiver: 'julia stores',
     destination_acct: account_number,
-    date_time: date,
+    transaction_date: date,
     status: 'successful',
     remark: narration,
   });
@@ -176,14 +180,16 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
   console.log(createTransferLog);
 
   const loggerPayload = {
-    type: 'Transfer',
+    transaction_type: 'Transfer',
     amount: amount,
+    account_number,
     customer_id: loggedInUser,
+    description: 'Bank Transfer',
     tx_ref: reference,
     status: 'successful', //TODO: this will com from flutterwave
   };
   const logTransaction = await transactionLogger(loggerPayload);
-
+  // TODO: send SMS
   console.log(logTransaction, 'popings');
 
   return res.status(200).send({
