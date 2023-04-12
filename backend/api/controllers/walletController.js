@@ -19,6 +19,7 @@ const { sendSMS } = require('../../service/twilioConfig');
 const { txSMSTemplate } = require('../../utils/txMessageTemplate');
 const { maskAccountNumber } = require('../../utils/maskAcctNumber');
 const { formatDate, formatCurrency } = require('../../utils/formatters');
+const { validateTransactionLimit } = require('../../utils/transactionLimitValidator');
 // ==========================CREATE WALLET CONTROLLER====================================================
 const createWallet = asyncWrapper(async (req, res, next) => {
   // !NOT FUNCTIONAL FOR NOW
@@ -112,11 +113,11 @@ const createWalletPin = asyncWrapper(async (req, res, next) => {
     );
 
   return res
-    .status(200)
+    .status(201)
     .send({ success: true, payload: 'Your wallet PIN has been successfully updated.' });
 });
 
-// -------------------------------------------------WALLET TRANSFERS--------------------------------------------------------------------
+// =================================================WALLET TRANSFERS==================================================================
 
 // This controller initiates wallet transfer
 
@@ -136,6 +137,22 @@ const walletTransfer = asyncWrapper(async (req, res, next) => {
   // gets wallet pin
   const isValid = getWallet.dataValues?.wallet_pin;
   amount = parseFloat(amount);
+  // check transaction eligibility
+  const { isEligible, txLimit, totalTx } = await validateTransactionLimit({
+    _user: getWallet.dataValues.user,
+    _amount: amount,
+  });
+  console.log(isEligible);
+  if (!isEligible)
+    return next(
+      createCustomError(
+        `We regret to inform you that you have reached the maximum transaction limit for the day. As per our policies, you are only permitted to transfer a sum of ${formatCurrency(
+          txLimit - totalTx
+        )} at this time.`,
+        400
+      )
+    );
+
   const senderBal = parseFloat(getWallet.dataValues?.balance);
   const senderAcct = getWallet.dataValues.wallet_code;
 
@@ -316,7 +333,6 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
   });
 
   // delete payload from session
-  req.session.transfer_payload = {}; //:TODO:
   const receipt = receiptGenerator(
     'Debit',
     amount,
@@ -342,6 +358,8 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     getRecipientsAcct.dataValues.user.phone,
     creditMessage
   );
+  req.session.transfer_payload = {}; //:TODO:
+
   // ******************SEND MESSAGE END********************
   return res.status(200).send({ success: true, payload: receipt });
 });
