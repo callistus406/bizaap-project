@@ -23,7 +23,8 @@ const otpValidation = asyncWrapper(async (req, res, next) => {
   });
 
   // if (!verified) return next(createCustomError('Invalid OTP', 400));
-  const { username, password, bvn, phone, email, full_name } = req.session.customer_details;
+  const { username, password, bvn, phone, email, full_name, business_name } =
+    req.session.customer_details;
   // User creation
   const createdUser = await UserModel.create({
     full_name,
@@ -32,6 +33,7 @@ const otpValidation = asyncWrapper(async (req, res, next) => {
     phone,
     password,
     bvn,
+    business_name,
   });
   // create wallet
   const walletCode = generateAccountNumber(createdUser.dataValues.phone);
