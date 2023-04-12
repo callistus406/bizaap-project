@@ -23,6 +23,10 @@ UserModel.init(
       allowNull: false,
       unique: true,
     },
+    business_name: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
+    },
     phone: {
       type: DataTypes.STRING(100),
       allowNull: false,
