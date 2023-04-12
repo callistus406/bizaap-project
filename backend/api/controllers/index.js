@@ -13,8 +13,9 @@ const {
   validateBiller,
 } = require('./flwcontrollers/billsController');
 const { bankVerification } = require('./flwcontrollers/bankVerification');
+// const {  } = require('./requestOTPController');
 const { getAllBanks } = require('./flwcontrollers/getBanksController');
-const otpValidation = require('./otpValidationController');
+const { otpValidation, requestOtp } = require('./OTPController');
 const { fetchBal } = require('./flwcontrollers/balanceController');
 const { income, expense, allTransactions } = require('./transactionsController');
 const { registerController } = require('./registerController');
@@ -55,6 +56,7 @@ module.exports = {
   walletTransfer,
   registerController,
   income,
+  requestOtp,
   fetchCustomerFoundItems,
   fetchLostItemsCtrl,
   lostItemCtrl,
