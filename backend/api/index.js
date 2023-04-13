@@ -14,6 +14,7 @@ const transactions = require('./routes/transactions');
 const billsPayment = require('./routes/flwRoutes/billsPayment');
 const checkKycVerification = require('./routes/kycVerification');
 const lostAndFound = require('./routes/lostAndFound');
+const transactionLimit = require('./routes/transactionLimit');
 const cardPayment = require('./routes/flwRoutes/receiveCardPayment');
 const bankVerification = require('./routes/flwRoutes/bankVerification');
 
@@ -35,6 +36,7 @@ router.use(profile);
 router.use(wallet);
 router.use(login);
 router.use(lostAndFound);
+router.use(transactionLimit);
 
 router.use(banks);
 
