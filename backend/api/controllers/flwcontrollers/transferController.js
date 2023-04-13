@@ -9,6 +9,8 @@ const Decimal = require('decimal.js');
 const { transactionLogger } = require('../../../utils/transactionLogger');
 const { createCustomError } = require('../../../middleware/customError');
 const UserModel = require('../../../models/userModel');
+const { validateTransactionLimit } = require('../../../utils/transactionLimitValidator');
+const { formatCurrency } = require('../../../utils/formatters');
 require('dotenv').config();
 
 const transfer = asyncWrapper(async (req, res, next) => {
@@ -16,7 +18,7 @@ const transfer = asyncWrapper(async (req, res, next) => {
   const loggedInUser = req.user?.user_id;
   // generate reference No
   const uniqueId = generateUniqueId();
-  let { account_bank: account_number, amount, narration } = req.body;
+  let { account_bank, account_number: account_number, amount, narration } = req.body;
   // input validation
   const validateData = req.body;
   const { error } = new TransferValidation(validateData).validate();
@@ -24,7 +26,7 @@ const transfer = asyncWrapper(async (req, res, next) => {
   if (isNaN(amount)) return next(createCustomError('Please enter a valid amount', 400));
   amount = parseFloat(amount);
   // payload caching
-  req.session.transfer_payload = { account_number, amount, narration };
+  req.session.transfer_payload = { account_number, amount, narration, account_bank };
   req.session.transfer_payload.currency = process.env.DEFAULT_CURRENCY;
   req.session.transfer_payload.reference = `TX-${uniqueId}`;
   req.session.transfer_payload.callback_url =
@@ -40,6 +42,7 @@ const transfer = asyncWrapper(async (req, res, next) => {
   const getWallet = await WalletModel.findOne({
     where: { wallet_owner: loggedInUser },
     attributes: ['balance'],
+    include: { model: UserModel },
   });
 
   const balance = parseFloat(getWallet.dataValues.balance);
@@ -60,6 +63,25 @@ const transfer = asyncWrapper(async (req, res, next) => {
   // adds the amount to withdraw and sys percentage and FLW charge
   const stampDutyPlusFlwCharge = stampDuty + flwCharge;
   const totalChargesPlusAmt = amount + stampDutyPlusFlwCharge;
+
+  // CHECK TRANSACTION LIMIT=========================================
+
+  const { isEligible, txLimit, totalTx } = await validateTransactionLimit({
+    _user: getWallet.dataValues.user.dataValues,
+    _amount: totalChargesPlusAmt,
+  });
+  console.log('------------------------');
+  console.log(totalChargesPlusAmt, flwCharge);
+  if (!isEligible)
+    return next(
+      createCustomError(
+        `We regret to inform you that you have reached the maximum transaction limit for the day. As per our policies, you are only permitted to transfer a sum of ${formatCurrency(
+          txLimit - (totalTx + flwCharge)
+        )} at this time.`,
+        400
+      )
+    );
+  // END OF TXLIMIT VALIDATION================================================
   // checks if the total charges and amount is less than clg
   const totalChargeMinusBal = balance - totalChargesPlusAmt;
   console.log({ flwCharge, amount, percentageCharge, totalChargesPlusAmt, balance, stampDuty });
@@ -92,8 +114,7 @@ const transfer = asyncWrapper(async (req, res, next) => {
           redirect_url: req.session.transfer_payload.wallet_pin_url,
         },
       });
-    console.log('------------------------');
-    console.log(req.session.transfer_payload);
+
     return res.status(200).send({ success: true, payload: req.session.transfer_payload });
   } else {
     return res.status(400).send({
