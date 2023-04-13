@@ -313,6 +313,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     'Debit',
     maskAccountNumber(sender_account),
     formatCurrency(amount),
+    formatCurrency(process.env.WALLET_TX_CHARGE),
     formatDate(newDate),
     `DM-${transactionCode}/TF/Wallet Transfer`,
     formatCurrency(senderFinalBal)
@@ -348,6 +349,7 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     'Credit',
     maskAccountNumber(receiver_account),
     formatCurrency(amount),
+    formatCurrency(process.env.WALLET_TX_CHARGE),
     formatDate(newDate),
     `DM-${transactionCode}/TF/Wallet Transfer`,
     formatCurrency(recipientsFinalBal)
