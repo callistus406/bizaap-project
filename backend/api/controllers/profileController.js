@@ -20,6 +20,7 @@ const getCustomersProfile = asyncWrapper(async (req, res) => {
 
 const updateCustomersProfile = asyncWrapper(async (req, res, next) => {
   const { user_id, phone, username } = req.user;
+  console.log({ user_id, phone, username });
   const { full_name, newUsername, newPhone } = req.body;
   const { error } = new ProfileValidator({
     full_name,
@@ -35,13 +36,16 @@ const updateCustomersProfile = asyncWrapper(async (req, res, next) => {
   const isUsernameReg = await UserModel.findOne({
     where: {
       username: {
-        [Op.regexp]: `(${username}|${username.toUpperCase()})`,
+        [Op.regexp]: `(${newUsername}|${newUsername.toUpperCase()})`,
       },
     },
   });
-  if (isUsernameReg && isUsernameReg.dataValues.username !== username)
-    return next(createCustomError('Username  is already taken.Please try another name', 400));
 
+  if (
+    (isUsernameReg && isUsernameReg.dataValues.username !== username) ||
+    (isUsernameReg && isUsernameReg.dataValues.phone !== phone)
+  )
+    return next(createCustomError('Username  is already taken.Please try another name', 400));
   const userProfile = await UserModel.update(
     { username: newUsername, phone: newPhone, full_name },
     { where: { user_id } }
