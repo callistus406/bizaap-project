@@ -10,7 +10,11 @@ const { transactionLogger } = require('../../../utils/transactionLogger');
 const { createCustomError } = require('../../../middleware/customError');
 const UserModel = require('../../../models/userModel');
 const { validateTransactionLimit } = require('../../../utils/transactionLimitValidator');
-const { formatCurrency } = require('../../../utils/formatters');
+const { formatCurrency, formatDate } = require('../../../utils/formatters');
+const { maskAccountNumber } = require('../../../utils/maskAcctNumber');
+const { sendSMS } = require('../../../service/twilioConfig');
+const { txSMSTemplate } = require('../../../utils/txMessageTemplate');
+const { receiptGenerator } = require('../../../utils/receiptGenerator');
 require('dotenv').config();
 
 const transfer = asyncWrapper(async (req, res, next) => {
@@ -33,10 +37,10 @@ const transfer = asyncWrapper(async (req, res, next) => {
     'https://webhook.site/b3e505b0-fe02-430e-a538-22bbbce8ce0d'; // TODO: change this to custom webhook
   req.session.transfer_payload.debit_currency = process.env.DEFAULT_CURRENCY;
   // reject amounts below 10 naira
-  if (amount < 50)
+  if (amount < 20)
     return res.status(400).send({
       success: false,
-      payload: 'Sorry, you can not transfer amount below 50 naira',
+      payload: 'Sorry, you can not transfer amount below 20 naira',
     });
   // get customers balance
   const getWallet = await WalletModel.findOne({
@@ -70,8 +74,7 @@ const transfer = asyncWrapper(async (req, res, next) => {
     _user: getWallet.dataValues.user.dataValues,
     _amount: totalChargesPlusAmt,
   });
-  console.log('------------------------');
-  console.log(totalChargesPlusAmt, flwCharge);
+
   if (!isEligible)
     return next(
       createCustomError(
@@ -126,14 +129,14 @@ const transfer = asyncWrapper(async (req, res, next) => {
 // -------------------------------------TRANSFER AUTHORIZATION---------------------------------------------------------------------------------
 
 const authorizeTransfer = asyncWrapper(async (req, res) => {
-  const loggedInUser = req.user?.user_id;
+  const envVar = process.env;
+  const { user_id, phone } = req.user;
   // get pin from customer
   const wallet_pin = req.body.wallet_pin;
   // find customer wallet
   const wallet = await WalletModel.findOne({
-    where: { wallet_owner: loggedInUser },
+    where: { wallet_owner: user_id },
   });
-  // return res.send({ wallet });
   // un-hash and compare wallet pin
   const unHashedPin = await new UnHashPassword(wallet_pin, wallet.wallet_pin).unHash();
   if (!unHashedPin) return res.status(400).send({ success: false, payload: 'Incorrect Pin' });
@@ -172,7 +175,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
   const updateCustomerWallet = await WalletModel.update(
     { balance: balance },
     {
-      where: { wallet_owner: loggedInUser },
+      where: { wallet_owner: user_id },
     }
   );
   const loggedInUserAcct = wallet.dataValues.wallet_code;
@@ -181,6 +184,7 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
     return res.status(500).send({ success: false, payload: 'SORRY SOMETHING WENT WRONG' });
   const date = new Date();
   // TODO: dynamic values will come from flw
+  const newDate = new Date();
 
   const createTransferLog = await TransferModel.create({
     sender_account: loggedInUserAcct,
@@ -197,25 +201,42 @@ const authorizeTransfer = asyncWrapper(async (req, res) => {
     remark: narration,
   });
 
-  console.log('"createTr-----------------------------------nsferLog"');
-  console.log(createTransferLog);
-
   const loggerPayload = {
-    transaction_type: 'Transfer',
+    transaction_type: 'Debit',
     amount: amount,
     account_number,
-    customer_id: loggedInUser,
+    customer_id: user_id,
     description: 'Bank Transfer',
     tx_ref: reference,
     status: 'successful', //TODO: this will com from flutterwave
   };
   const logTransaction = await transactionLogger(loggerPayload);
-  // TODO: send SMS
-  console.log(logTransaction, 'popings');
+  // generate receipt
+  const receipt = receiptGenerator(
+    'Debit',
+    amount,
+    `TX-${reference}`,
+    account_number,
+    'Bank Transfer',
+    'successful', //from flutterwave TODO:
+    newDate,
+    narration
+  );
+  // SEND DEBIT MESSAGE TO THE SENDER
+  const debitMessage = txSMSTemplate(
+    'Debit',
+    maskAccountNumber(wallet.wallet_code),
+    formatCurrency(amount),
+    formatCurrency(total_charge),
+    formatDate(newDate),
+    `${'fromFLW'}/TF/Bank Transfer`,
+    formatCurrency(balance)
+  );
+  const senderResponse = await sendSMS(envVar.TWILIO_FROM_NUMBER, phone, debitMessage);
 
   return res.status(200).send({
     success: true,
-    payload: createTransferLog,
+    payload: receipt,
   });
 });
 module.exports = { transfer, authorizeTransfer };
