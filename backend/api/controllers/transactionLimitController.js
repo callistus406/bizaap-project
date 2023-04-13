@@ -14,7 +14,7 @@ const calcTransactionLimitCtrl = asyncWrapper(async (req, res, next) => {
     where: {
       customer_id: user.user_id,
       transaction_type: 'Debit',
-      [Op.and]: sequelize.literal(`DATE(updatedAt) = '2023-5-14'`),
+      [Op.and]: sequelize.literal(`DATE(updatedAt) = '${today}'`),
     },
   });
 
