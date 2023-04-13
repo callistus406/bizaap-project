@@ -2,7 +2,7 @@ const formatDate = (date) => {
   let day = String(date.getDate()).padStart(2, '0');
   let month = String(date.getMonth() + 1).padStart(2, '0');
   let year = String(date.getFullYear());
-  return `${day}/${month}/${year}`;
+  return `${year}-${month}-${day}`;
 };
 const formatCurrency = (amount) => {
   const formatter = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' });
