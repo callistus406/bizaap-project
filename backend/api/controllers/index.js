@@ -35,6 +35,7 @@ const {
   validateCardTransaction,
 } = require('./flwcontrollers/receiveCardPaymentController');
 
+const { calcTransactionLimitCtrl } = require('./transactionLimitController');
 const { resetPassword, confirmResetPassword } = require('./resetPasswordController');
 const {
   checkKycVerification,
@@ -79,4 +80,5 @@ module.exports = {
   resetWalletPin,
   kycVerificationCtrl,
   kycVerificationFinalStageCtrl,
+  calcTransactionLimitCtrl,
 };
