@@ -18,6 +18,7 @@ const validateTransactionLimit = async ({ _user, _amount }) => {
 
   //   return;
   let _txLimit = _user.business_name ? envVar.BUSINESS_TX_LIMIT : envVar.INDIVIDUAL_TX_LIMIT;
+  _txLimit = parseFloat(_txLimit);
   if (!totalTx) return { isEligible: true, txLimit: _txLimit, totalTx };
   const totalTxPlusAmt = totalTx + _amount;
   console.log(totalTxPlusAmt);
