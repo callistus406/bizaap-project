@@ -20,6 +20,7 @@ const { txSMSTemplate } = require('../../utils/txMessageTemplate');
 const { maskAccountNumber } = require('../../utils/maskAcctNumber');
 const { formatDate, formatCurrency } = require('../../utils/formatters');
 const { validateTransactionLimit } = require('../../utils/transactionLimitValidator');
+const { errorLogger } = require('../../utils/fileLogger');
 // ==========================CREATE WALLET CONTROLLER====================================================
 const createWallet = asyncWrapper(async (req, res, next) => {
   // !NOT FUNCTIONAL FOR NOW
@@ -236,13 +237,23 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     { where: { wallet_owner: user_id } }
   );
 
-  if (!updateSenderAcct[0])
+  if (!updateSenderAcct[0]) {
+    const errorPayload = {
+      error_type: 'DB Error',
+      user_id: user_id,
+      source: 'Wallet Table',
+      message: `Unable to update wallet database with user with debit balance balance of  ${formatCurrency(
+        senderFinalBal
+      )}. amount sent: ${formatCurrency(amount)}`,
+    };
+    errorLogger(errorPayload);
     return next(
       createCustomError(
         'System is unable to complete transaction, please wait for a few minutes, check your balance before you try again',
         500
       )
     );
+  }
 
   // ------------------+++++++++++++++++ RECIPIENT SECTION+++++++++++----------------------------------
   const getRecipientsAcct = await WalletModel.findOne({
@@ -266,13 +277,23 @@ const authorizeWalletTransfer = asyncWrapper(async (req, res, next) => {
     { where: { wallet_code: receiver_account } }
   );
   // CHECK IF UPDATE WAS SUCCESSFUL
-  if (!updateRecipientsAcct[0])
+  if (!updateRecipientsAcct[0]) {
+    const errorPayload = {
+      error_type: 'DB Error',
+      user_id: user_id,
+      source: 'Wallet Table',
+      message: `Unable to update wallet database with user with credit balance balance of  ${formatCurrency(
+        recipientsFinalBal
+      )}. amount to receive: ${formatCurrency(amount)}`,
+    };
+    errorLogger(errorPayload);
     return next(
       createCustomError(
         'System is unable to complete transaction, please wait for a few minutes, check your balance before you try again',
         400
       )
     );
+  }
   // GET TRANSACTION DATE
   const newDate = new Date();
   // GEN UNIQUE REF NUM
@@ -398,13 +419,21 @@ const resetWalletPin = asyncWrapper(async (req, res, next) => {
     { where: { wallet_owner: loggedInUser } }
   );
 
-  if (!updatePin[0])
+  if (!updatePin[0]) {
+    const errorPayload = {
+      error_type: 'DB Error',
+      user_id: user_id,
+      source: 'Wallet Table',
+      message: `Unable to update wallet pin `,
+    };
+    errorLogger(errorPayload);
     return next(
       createCustomError(
         'Sorry,system is unable to update your wallet pin.please try again later',
         500
       )
     );
+  }
 
   return res.status(200).send({ success: true, payload: 'Wallet pin update, successful!' });
 });
