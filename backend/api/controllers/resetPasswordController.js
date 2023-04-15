@@ -14,7 +14,7 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
   // generate a unique token for this reset request
   const resetToken = jwt.sign({ email }, process.env.RESET_TOKEN_SECRET, { expiresIn: '1h' });
 
-  // store the reset token in your database, along with the user's email address or username
+  // store the reset token in database, along with the user's email
   const isTrue = await storeResetToken(email, resetToken);
 
   // send an email to the user with a link that includes the reset token
@@ -31,12 +31,12 @@ const confirmResetPassword = asyncWrapper(async (req, res, next) => {
   const { password } = req.body;
   const { error } = new PasswordValidation({ password: password }).validate();
   if (error) return next(createCustomError(error.message, 400));
-  // verify the reset token and retrieve the user's email address or username
+  // verify the reset token and retrieve the user's email address
   const { email } = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
-  // update the user's password in your database
+  // update the user's password in  database
   await updatePassword(email, password, next);
 
-  // delete the reset token from your database
+  // delete the reset token from  database
   await deleteResetToken(email, token);
 
   // return a response indicating that the password reset was successful
@@ -44,7 +44,7 @@ const confirmResetPassword = asyncWrapper(async (req, res, next) => {
 });
 
 async function storeResetToken(email, token) {
-  // store the reset token in your database, along with the user's email address or username
+  // store the reset token in  database, along with the user's email address
   const createRecord = await ResetPasswordModel.create({
     email: email,
     token: token,
