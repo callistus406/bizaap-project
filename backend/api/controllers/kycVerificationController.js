@@ -1,10 +1,9 @@
-const asyncWrapper = require('../../middleware/asyncWrapper');
 const { createCustomError } = require('../../middleware/customError');
+const asyncWrapper = require('../../middleware/asyncWrapper');
 const KycModel = require('../../models/kycModel');
 const UserModel = require('../../models/userModel');
 require('dotenv').config();
 const checkKycVerification = asyncWrapper(async (req, res, next) => {
-  console.log(req.use);
   const isVerified = await UserModel.findOne({
     where: { user_id: req.user.user_id },
     include: KycModel,
@@ -48,7 +47,6 @@ const kycVerificationFinalStageCtrl = asyncWrapper(async (req, res, next) => {
   const photo_url = process.env.DOMAIN_NAME + '' + path;
   // console.log(req.file);
 
-  // return;
   // update kyc table
   const storeKycDetails = await KycModel.create({
     user_id,
