@@ -36,7 +36,7 @@ const DepositModel = sequelize.define('deposit', {
     allowNull: false,
   },
   account_number: {
-    type: DataTypes.STRING(10), //receivers acct
+    type: DataTypes.STRING(10), //receivers acct or account owner
     allowNull: false,
     references: {
       model: WalletModel,
